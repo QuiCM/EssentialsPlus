@@ -11,8 +11,8 @@ using TShockAPI;
 namespace EssentialsPlus
 {
 	[ApiVersion(1, 16)]
-    public partial class EssentialsPlus : TerrariaPlugin
-    {
+	public partial class EssentialsPlus : TerrariaPlugin
+	{
 		private Config config = new Config();
 
 		public override string Author
@@ -83,5 +83,5 @@ namespace EssentialsPlus
 			});
 			#endregion
 		}
-    }
+	}
 }
