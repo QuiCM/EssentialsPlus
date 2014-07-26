@@ -8,8 +8,16 @@ using Newtonsoft.Json;
 
 namespace EssentialsPlus
 {
-	class Config
+	public class Config
 	{
+		public int BackPointHistory = 10;
+		public bool EnableBackInPvp = true;
+
+		public string MySqlHost = "";
+		public string MySqlDbName = "";
+		public string MySqlUsername = "";
+		public string MySqlPassword = "";
+
 		public void Write(string path)
 		{
 			File.WriteAllText(path, JsonConvert.SerializeObject(this, Formatting.Indented));
