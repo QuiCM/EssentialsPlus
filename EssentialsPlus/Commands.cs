@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using EssentialsPlus.Extensions;
+using Terraria;
 using TShockAPI;
 
 namespace EssentialsPlus
@@ -32,17 +33,197 @@ namespace EssentialsPlus
 			}
 			player.Teleport(player.BackPoints[--steps]);
 		}
+
 		public static void Down(CommandArgs e)
 		{
+		    if (e.Parameters.Count == 0)
+		    {
+		        e.Parameters.Add("1");
+		    }
+            else if (e.Parameters.Count > 1)
+            {
+                e.Player.SendErrorMessage("Invalid syntax! Correct syntax: {0}down [levels]", TShock.Config.CommandSpecifier);
+                return;
+            }
+
+		    int levels = 0;
+            bool tile = false;
+            int levelsDetected = 0;
+
+		    if (int.TryParse(e.Parameters[0], out levels))
+		    {
+		        for (int i = e.Player.TileY; i < Main.maxTilesY; i++)
+		        {
+		            if (Main.tile[e.Player.TileX, i].active() == false)
+		            {
+		                if (tile)
+		                {
+		                    tile = false;
+		                    levelsDetected++;
+		                    if (levelsDetected == levels)
+		                    {
+                                e.Player.GetEssentialsPlayer().AddBackPoint(new Vector2(e.Player.X, e.Player.Y));
+		                        e.Player.Teleport(e.Player.X, (i*16));
+                                e.Player.SendInfoMessage("Teleported down {0} levels.", levelsDetected);
+		                        return;
+		                    }
+		                }
+		            }
+		            else
+		            {
+		                tile = true;
+		            }
+		        }
+		        e.Player.SendInfoMessage("Could not teleport {0} levels. Only {1} levels detected.", levels, levelsDetected);
+		    }
+		    else
+		    {
+                e.Player.SendErrorMessage("Invalid distance '{0}'!", e.Parameters[0]);    
+		    }
 		}
+
 		public static void Left(CommandArgs e)
 		{
+            if (e.Parameters.Count == 0)
+            {
+                e.Parameters.Add("1");
+            }
+            else if (e.Parameters.Count > 1)
+            {
+                e.Player.SendErrorMessage("Invalid syntax! Correct syntax: {0}left [distance]", TShock.Config.CommandSpecifier);
+                return;
+            }
+
+            int levels = 0;
+            bool tile = false;
+            int levelsDetected = 0;
+
+            if (int.TryParse(e.Parameters[0], out levels))
+            {
+                for (int i = e.Player.TileX; i > 1; i--)
+                {
+                    if (Main.tile[i, e.Player.TileY].active() == false)
+                    {
+                        if (tile)
+                        {
+                            tile = false;
+                            levelsDetected++;
+                            if (levelsDetected == levels)
+                            {
+                                e.Player.GetEssentialsPlayer().AddBackPoint(new Vector2(e.Player.X, e.Player.Y));
+                                e.Player.Teleport(((i-1) * 16), e.Player.Y);
+                                e.Player.SendInfoMessage("Teleported left {0} levels.", levelsDetected);
+                                return;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        tile = true;
+                    }
+                }
+                e.Player.SendInfoMessage("Could not teleport {0} levels. Only {1} levels detected.", levels, levelsDetected);
+            }
+            else
+            {
+                e.Player.SendErrorMessage("Invalid distance '{0}'!", e.Parameters[0]);
+            }
 		}
+
 		public static void Right(CommandArgs e)
-		{
+        {
+            if (e.Parameters.Count == 0)
+            {
+                e.Parameters.Add("1");
+            }
+            else if (e.Parameters.Count > 1)
+            {
+                e.Player.SendErrorMessage("Invalid syntax! Correct syntax: {0}right [distance]", TShock.Config.CommandSpecifier);
+                return;
+            }
+
+            int levels = 0;
+            bool tile = false;
+            int levelsDetected = 0;
+
+            if (int.TryParse(e.Parameters[0], out levels))
+            {
+                for (int i = e.Player.TileX; i < Main.maxTilesX; i++)
+                {
+                    if (Main.tile[i, e.Player.TileY].active() == false)
+                    {
+                        if (tile)
+                        {
+                            tile = false;
+                            levelsDetected++;
+                            if (levelsDetected == levels)
+                            {
+                                e.Player.GetEssentialsPlayer().AddBackPoint(new Vector2(e.Player.X, e.Player.Y));
+                                e.Player.Teleport((i * 16), e.Player.Y);
+                                e.Player.SendInfoMessage("Teleported right {0} levels.", levelsDetected);
+                                return;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        tile = true;
+                    }
+                }
+                e.Player.SendInfoMessage("Could not teleport {0} levels. Only {1} levels detected.", levels, levelsDetected);
+            }
+            else
+            {
+                e.Player.SendErrorMessage("Invalid distance '{0}'!", e.Parameters[0]);
+            }
 		}
+
 		public static void Up(CommandArgs e)
 		{
+            if (e.Parameters.Count == 0)
+            {
+                e.Parameters.Add("1");
+            }
+            else if (e.Parameters.Count > 1)
+            {
+                e.Player.SendErrorMessage("Invalid syntax! Correct syntax: {0}down [distance]", TShock.Config.CommandSpecifier);
+                return;
+            }
+
+            int levels = 0;
+            bool tile = false;
+            int levelsDetected = 0;
+
+            if (int.TryParse(e.Parameters[0], out levels))
+            {
+                for (int i = e.Player.TileY; i > 1; i--)
+                {
+                    if (Main.tile[e.Player.TileX, i].active() == false)
+                    {
+                        if (tile)
+                        {
+                            tile = false;
+                            levelsDetected++;
+                            if (levelsDetected == levels)
+                            {
+                                e.Player.GetEssentialsPlayer().AddBackPoint(new Vector2(e.Player.X, e.Player.Y));
+                                e.Player.Teleport(e.Player.X, ((i-3) * 16));
+                                e.Player.SendInfoMessage("Teleported up {0} levels.", levelsDetected);
+                                return;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        tile = true;
+                    }
+                }
+                e.Player.SendInfoMessage("Could not teleport {0} levels. Only {1} levels detected.", levels, levelsDetected);
+            }
+            else
+            {
+                e.Player.SendErrorMessage("Invalid distance '{0}'!", e.Parameters[0]);
+            }
 		}
 
 		public static async void Sudo(CommandArgs e)
