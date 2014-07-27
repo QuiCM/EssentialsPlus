@@ -110,7 +110,7 @@ namespace EssentialsPlus
 			List<KeyValuePair<int, string>> npcList = new List<KeyValuePair<int,string>>();
 			StringBuilder sb = new StringBuilder();
 			/*
-			 * Output per item:  [N] Eye of Chtulhu (ID 4)
+			 * Output per item:  Eye of Chtulhu (NPC ID 4)
 			 */
 			string itemTemplate = "{1} ({0} ID {2})";
 			int itemsPerLine = 3;
