@@ -84,7 +84,13 @@ namespace EssentialsPlus
 					}
 				}
 
-				await Task.Run(() => command.CommandDelegate(new CommandArgs(message, players[0], args)));
+				await Task.Run(() =>
+				{
+					command.CommandDelegate(new CommandArgs(message, players[0], args));
+				}).ContinueWith(t =>
+				{
+					Log.ConsoleError(t.Exception.ToString());
+				}, TaskContinuationOptions.OnlyOnFaulted);
 
 				e.Player.SendSuccessMessage("Forced {0} to execute {1}{2}.", players[0].Name, TShock.Config.CommandSpecifier, message);
 				if (!e.Player.Group.HasPermission("essentials.sudo.invisible"))
