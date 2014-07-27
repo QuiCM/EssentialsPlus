@@ -5,11 +5,14 @@ using System.Text;
 using System.Threading.Tasks;
 using EssentialsPlus.Extensions;
 using TShockAPI;
+using System.Text.RegularExpressions;
 
 namespace EssentialsPlus
 {
 	public static class Commands
 	{
+		private static readonly Regex findPattern = new Regex("(\\/?\\w+) (-(\\w+) )?\"*(.+?)\"*$");
+
 		public static void Back(CommandArgs e)
 		{
 			if (e.Parameters.Count > 1)
@@ -98,6 +101,140 @@ namespace EssentialsPlus
 					Log.Error(ex.ToString());
 				}
 			}
+		}
+
+		public static async void Find(CommandArgs e)
+		{
+			Match match = null;
+			string switchText = null;
+			string findText = null;
+			List<KeyValuePair<int, string>> itemList = new List<KeyValuePair<int,string>>();
+			List<KeyValuePair<int, string>> npcList = new List<KeyValuePair<int,string>>();
+			StringBuilder sb = new StringBuilder();
+			/*
+			 * Output per item:  Eye of Chtulhu (NPC ID 4)
+			 */
+			string itemTemplate = "{1} ({0} ID {2})";
+			int itemsPerLine = 3;
+			int totalItemCount = 0;
+			int totalLineCount = 0;
+			int maxLineCount = 7;
+
+			/*
+			 * Match groups:
+			 *	0: The string, the whole string and nothing but the string
+			 *	3: The switch text, eg "npc", or "item" (optional)
+			 *	4: The search paramaters. May include spaces and never quotes
+			 */
+			if (findPattern.IsMatch(e.Message) == false
+				|| (match = findPattern.Match(e.Message)) == null
+				|| string.IsNullOrEmpty((findText = match.Groups[4].Value)) == true) {
+				e.Player.SendErrorMessage("/find: Invalid syntax. Usage: /find -[npc|item] <name>");
+				return;
+			}
+
+			if (string.IsNullOrEmpty((switchText = match.Groups[3].Value)) == true) {
+				switchText = "all";
+			}
+
+			if (switchText.Equals("all", StringComparison.InvariantCultureIgnoreCase)) {
+				itemList.AddRange(await FindItemByNameAsync(findText));
+				npcList.AddRange(await FindNPCByNameAsync(findText));
+			} else if (switchText.Equals("npc", StringComparison.InvariantCultureIgnoreCase)) {
+				npcList.AddRange(await FindNPCByNameAsync(findText));
+			} else if (switchText.Equals("item", StringComparison.InvariantCultureIgnoreCase)) {
+				itemList.AddRange(await FindItemByNameAsync(findText));
+			}
+
+			totalItemCount = npcList.Count + itemList.Count;
+			totalLineCount = totalItemCount / itemsPerLine;
+
+			if (totalItemCount == 0) {
+				e.Player.SendInfoMessage("/find: nothing was found for that search criteria.");
+				return;
+			}
+
+			if (totalLineCount > maxLineCount) {
+				e.Player.SendInfoMessage("/find: too many results were returned, please try narrowing your search.");
+				return;
+			}
+
+			/*
+			 * Format items
+			 */
+			for (int i = 0; i < itemList.Count; i++) {
+				KeyValuePair<int, string> item = itemList[i];
+				sb.AppendFormat(itemTemplate, "Item", item.Value, item.Key);
+				if (i % itemsPerLine == 0) {
+					e.Player.SendInfoMessage(sb.ToString());
+					sb.Clear();
+				} else if (i <= itemList.Count - 1) {
+					sb.Append(", ");
+				}
+			}
+
+			if (sb.Length > 0) {
+				e.Player.SendInfoMessage(sb.ToString());
+				sb.Clear();
+			}
+
+			/*
+			 * Format NPCs
+			 */
+			for (int i = 0; i < npcList.Count; i++) {
+				KeyValuePair<int, string> item = npcList[i];
+				sb.AppendFormat(itemTemplate, "NPC", item.Value, item.Key);
+				if (i % itemsPerLine == 0) {
+					e.Player.SendInfoMessage(sb.ToString());
+					sb.Clear();
+				} else if (i <= npcList.Count - 1) {
+					sb.Append(", ");
+				}
+			}
+
+			if (sb.Length > 0) {
+				e.Player.SendInfoMessage(sb.ToString());
+				sb.Clear();
+			}
+		}
+
+		private static async Task<List<KeyValuePair<int, string>>> FindItemByNameAsync(string findText)
+		{
+			List<KeyValuePair<int, string>> itemList = new List<KeyValuePair<int, string>>();
+
+			await Task.Run(() => {
+				for (int i = 0; i < Terraria.Main.itemName.Count(); i++) {
+					Terraria.Item item = new Terraria.Item();
+					item.SetDefaults(Terraria.Main.itemName[i]);
+
+					if (item.name.ContainsInsensitive(findText) == false) {
+						continue;
+					}
+					itemList.Add(new KeyValuePair<int, string>(item.netID, item.name));
+				}
+			});
+
+			return itemList;
+		}
+
+		private static async Task<List<KeyValuePair<int, string>>> FindNPCByNameAsync(string findText)
+		{
+			List<KeyValuePair<int, string>> npcList = new List<KeyValuePair<int, string>>();
+
+			await Task.Run(() => {
+				for (int i = 0; i < Terraria.Main.npcName.Count(); i++) {
+					Terraria.NPC npc = new Terraria.NPC();
+					npc.SetDefaults(Terraria.Main.npcName[i]);
+
+					if (npc.name.ContainsInsensitive(findText) == false) {
+						continue;
+					}
+
+					npcList.Add(new KeyValuePair<int, string>(npc.netID, npc.name));
+				}
+			});
+
+			return npcList;
 		}
 	}
 }

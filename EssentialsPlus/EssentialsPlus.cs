@@ -140,6 +140,10 @@ namespace EssentialsPlus
 			{
 				HelpText = "Allows you to execute a command as another user."
 			});
+
+			TShockAPI.Commands.ChatCommands.Add(new Command("essentials.find", Commands.Find, "find") {
+				HelpText = "Finds an item and/or NPC with the specified name."
+			});
 			#endregion
 		}
 		private void OnLeave(LeaveEventArgs e)
