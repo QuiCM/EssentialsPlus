@@ -10,8 +10,12 @@ namespace EssentialsPlus
 {
 	public class Config
 	{
+		public string[] DisabledCommandsInPvp = new string[]
+		{
+			"back"
+		};
+
 		public int BackPointHistory = 10;
-		public bool EnableBackInPvp = true;
 
 		public string MySqlHost = "";
 		public string MySqlDbName = "";

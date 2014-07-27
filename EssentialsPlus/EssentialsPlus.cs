@@ -8,6 +8,7 @@ using EssentialsPlus.Extensions;
 using Terraria;
 using TerrariaApi.Server;
 using TShockAPI;
+using TShockAPI.Hooks;
 
 namespace EssentialsPlus
 {
@@ -42,6 +43,8 @@ namespace EssentialsPlus
 		{
 			if (disposing)
 			{
+				PlayerHooks.PlayerCommand -= OnPlayerCommand;
+
 				ServerApi.Hooks.GameInitialize.Deregister(this, OnInitialize);
 				ServerApi.Hooks.NetGetData.Deregister(this, OnGetData);
 				ServerApi.Hooks.NetGreetPlayer.Deregister(this, OnGreetPlayer);
@@ -51,13 +54,15 @@ namespace EssentialsPlus
 		}
 		public override void Initialize()
 		{
+			PlayerHooks.PlayerCommand += OnPlayerCommand;
+
 			ServerApi.Hooks.GameInitialize.Register(this, OnInitialize);
 			ServerApi.Hooks.NetGetData.Register(this, OnGetData);
 			ServerApi.Hooks.NetGreetPlayer.Register(this, OnGreetPlayer);
 			ServerApi.Hooks.NetSendData.Register(this, OnSendData);
 			ServerApi.Hooks.ServerLeave.Register(this, OnLeave);
 		}
-		
+
 		private void OnGetData(GetDataEventArgs e)
 		{
 			if (e.Handled)
@@ -71,26 +76,14 @@ namespace EssentialsPlus
 			if (player == null)
 				return;
 
-			using (var reader = new BinaryReader(new MemoryStream(e.Msg.readBuffer, e.Index, e.Length)))
+			switch (e.MsgID)
 			{
-				switch (e.MsgID)
-				{
-					#region Packet 45 - PlayerKillMe
-					case PacketTypes.PlayerKillMe:
-						{
-							var playerID = reader.ReadByte();
-							if (playerID != e.Msg.whoAmI)
-								return;
-
-							if (player.HasPermission("essentials.tp.back") && (Config.EnableBackInPvp || !player.TPlayer.hostile))
-							{
-								player.AddBackPoint(player.TPlayer.position);
-								player.SendInfoMessage("Use /back to return to your death point!");
-							}
-							return;
-						}
-					#endregion
-				}
+				#region Packet 45 - PlayerKillMe
+				case PacketTypes.PlayerKillMe:
+					if (player.HasPermission("essentials.tp.back"))
+						player.AddBackPoint(player.TPlayer.position);
+					return;
+				#endregion
 			}
 		}
 		private void OnGreetPlayer(GreetPlayerEventArgs e)
@@ -150,6 +143,21 @@ namespace EssentialsPlus
 			TSPlayer tsplayer = TShock.Players[e.Who];
 			if (tsplayer != null)
 				tsplayer.DetachEssentialsPlayer();
+		}
+		private void OnPlayerCommand(PlayerCommandEventArgs e)
+		{
+			if (e.Handled || e.Player == null)
+				return;
+
+			Command command = e.CommandList.FirstOrDefault();
+			if (command == null || !command.Permissions.Any(s => e.Player.HasPermission(s)))
+				return;
+
+			if (e.Player.TPlayer.hostile && command.Names.Intersect(Config.DisabledCommandsInPvp).Any())
+			{
+				e.Player.SendErrorMessage("This command is blocked while in PvP!");
+				e.Handled = true;
+			}
 		}
 		private void OnSendData(SendDataEventArgs e)
 		{

@@ -21,19 +21,23 @@ namespace EssentialsPlus
 				e.Player.SendErrorMessage("Invalid syntax! Proper syntax: {0}back [steps]", TShock.Config.CommandSpecifier);
 				return;
 			}
-			if (e.TPlayer.hostile && !EssentialsPlus.Config.EnableBackInPvp)
-			{
-				e.Player.SendErrorMessage("You cannot teleport back in PvP!");
-				return;
-			}
 
-			Player player = e.Player.GetEssentialsPlayer();
 			int steps = 1;
-			if (e.Parameters.Count > 0 && (!int.TryParse(e.Parameters[0], out steps) || steps < 0 || steps > player.BackPoints.Count))
+			if (e.Parameters.Count > 0 && (!int.TryParse(e.Parameters[0], out steps) || steps <= 0))
 			{
 				e.Player.SendErrorMessage("Invalid number of steps '{0}'!", e.Parameters[0]);
 				return;
 			}
+
+			Player player = e.Player.GetEssentialsPlayer();
+			if (player.BackPoints.Count == 0)
+			{
+				e.Player.SendErrorMessage("Could not teleport back!");
+				return;
+			}
+
+			steps = Math.Min(steps, player.BackPoints.Count);
+			e.Player.SendSuccessMessage("Teleported back {0} step{1}.", steps, steps == 1 ? "" : "s");
 			player.Teleport(player.BackPoints[--steps]);
 		}
 		public static async void Down(CommandArgs e)
@@ -76,11 +80,12 @@ namespace EssentialsPlus
 			});
 
 			if (currentLevel <= 0)
-				e.Player.SendErrorMessage("Could not teleport down.");
+				e.Player.SendErrorMessage("Could not teleport down!");
 			else
 			{
-				e.Player.GetEssentialsPlayer().AddBackPoint(e.TPlayer.position);
-				e.Player.Teleport(16 * x, 16 * (y - 1));
+				if (e.Player.HasPermission("essentials.tp.back"))
+					e.Player.GetEssentialsPlayer().AddBackPoint(e.TPlayer.position);
+				e.Player.Teleport(16 * x, 16 * y - 10);
 				e.Player.SendSuccessMessage("Teleported down {0} level{1}.", currentLevel, currentLevel == 1 ? "" : "s");
 			}
 		}
@@ -120,17 +125,16 @@ namespace EssentialsPlus
 						}
 					}
 					else
-					{
 						solid = true;
-					}
 				}
 			});
 
 			if (currentLevel <= 0)
-				e.Player.SendErrorMessage("Could not teleport left.");
+				e.Player.SendErrorMessage("Could not teleport left!");
 			else
 			{
-				e.Player.GetEssentialsPlayer().AddBackPoint(e.TPlayer.position);
+				if (e.Player.HasPermission("essentials.tp.back"))
+					e.Player.GetEssentialsPlayer().AddBackPoint(e.TPlayer.position);
 				e.Player.Teleport(16 * x + 12, 16 * y);
 				e.Player.SendSuccessMessage("Teleported left {0} level{1}.", currentLevel, currentLevel == 1 ? "" : "s");
 			}
@@ -171,17 +175,16 @@ namespace EssentialsPlus
 						}
 					}
 					else
-					{
 						solid = true;
-					}
 				}
 			});
 
 			if (currentLevel <= 0)
-				e.Player.SendErrorMessage("Could not teleport right.");
+				e.Player.SendErrorMessage("Could not teleport right!");
 			else
 			{
-				e.Player.GetEssentialsPlayer().AddBackPoint(e.TPlayer.position);
+				if (e.Player.HasPermission("essentials.tp.back"))
+					e.Player.GetEssentialsPlayer().AddBackPoint(e.TPlayer.position);
 				e.Player.Teleport(16 * x, 16 * y);
 				e.Player.SendSuccessMessage("Teleported right {0} level{1}.", currentLevel, currentLevel == 1 ? "" : "s");
 			}
@@ -222,17 +225,16 @@ namespace EssentialsPlus
 						}
 					}
 					else
-					{
 						solid = true;
-					}
 				}
 			});
 
 			if (currentLevel <= 0)
-				e.Player.SendErrorMessage("Could not teleport up.");
+				e.Player.SendErrorMessage("Could not teleport up!");
 			else
 			{
-				e.Player.GetEssentialsPlayer().AddBackPoint(e.TPlayer.position);
+				if (e.Player.HasPermission("essentials.tp.back"))
+					e.Player.GetEssentialsPlayer().AddBackPoint(e.TPlayer.position);
 				e.Player.Teleport(16 * x, 16 * y + 6);
 				e.Player.SendSuccessMessage("Teleported up {0} level{1}.", currentLevel, currentLevel == 1 ? "" : "s");
 			}
