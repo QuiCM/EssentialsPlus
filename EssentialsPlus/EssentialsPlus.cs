@@ -73,7 +73,7 @@ namespace EssentialsPlus
 				#region Packet 45 - PlayerKillMe
 				case PacketTypes.PlayerKillMe:
 					if (tsplayer.HasPermission("essentials.tp.back"))
-						tsplayer.GetEssentials().PushBackHistory(tsplayer.TPlayer.position);
+						tsplayer.GetPlayerInfo().PushBackHistory(tsplayer.TPlayer.position);
 					return;
 				#endregion
 			}
@@ -92,6 +92,12 @@ namespace EssentialsPlus
 			TShockAPI.Commands.ChatCommands.Add(new Command("essentials.lastcommand", Commands.RepeatLast, "=")
 			{
 				HelpText = "Allows you to repeat your last command."
+			});
+
+			TShockAPI.Commands.ChatCommands.Add(new Command("essentials.ruler", Commands.Ruler, "ruler")
+			{
+				AllowServer = false,
+				HelpText = "Allows you to measure the distances between two blocks."
 			});
 
 			TShockAPI.Commands.ChatCommands.Add(new Command("essentials.sudo", Commands.Sudo, "sudo")
@@ -141,7 +147,7 @@ namespace EssentialsPlus
 				e.Handled = true;
 			}
 			else if (e.Player.HasPermission("essentials.lastcommand") && command.CommandDelegate != Commands.RepeatLast)
-				e.Player.GetEssentials().LastCommand = e.CommandText;
+				e.Player.GetPlayerInfo().LastCommand = e.CommandText;
 		}
 		private void OnSendData(SendDataEventArgs e)
 		{

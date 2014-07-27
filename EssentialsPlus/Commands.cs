@@ -29,7 +29,7 @@ namespace EssentialsPlus
 				return;
 			}
 
-			Player player = e.Player.GetEssentials();
+			PlayerInfo player = e.Player.GetPlayerInfo();
 			if (player.BackHistoryCount == 0)
 			{
 				e.Player.SendErrorMessage("Could not teleport back!");
@@ -38,7 +38,8 @@ namespace EssentialsPlus
 
 			steps = Math.Min(steps, player.BackHistoryCount);
 			e.Player.SendSuccessMessage("Teleported back {0} step{1}.", steps, steps == 1 ? "" : "s");
-			player.Teleport(player.PopBackHistory(steps));
+			Vector2 vector = player.PopBackHistory(steps);
+			e.Player.Teleport(vector.X, vector.Y);
 		}
 		public static async void Down(CommandArgs e)
 		{
@@ -84,7 +85,7 @@ namespace EssentialsPlus
 			else
 			{
 				if (e.Player.HasPermission("essentials.tp.back"))
-					e.Player.GetEssentials().PushBackHistory(e.TPlayer.position);
+					e.Player.GetPlayerInfo().PushBackHistory(e.TPlayer.position);
 				e.Player.Teleport(16 * x, 16 * y - 10);
 				e.Player.SendSuccessMessage("Teleported down {0} level{1}.", currentLevel, currentLevel == 1 ? "" : "s");
 			}
@@ -134,7 +135,7 @@ namespace EssentialsPlus
 			else
 			{
 				if (e.Player.HasPermission("essentials.tp.back"))
-					e.Player.GetEssentials().PushBackHistory(e.TPlayer.position);
+					e.Player.GetPlayerInfo().PushBackHistory(e.TPlayer.position);
 				e.Player.Teleport(16 * x + 12, 16 * y);
 				e.Player.SendSuccessMessage("Teleported left {0} level{1}.", currentLevel, currentLevel == 1 ? "" : "s");
 			}
@@ -184,7 +185,7 @@ namespace EssentialsPlus
 			else
 			{
 				if (e.Player.HasPermission("essentials.tp.back"))
-					e.Player.GetEssentials().PushBackHistory(e.TPlayer.position);
+					e.Player.GetPlayerInfo().PushBackHistory(e.TPlayer.position);
 				e.Player.Teleport(16 * x, 16 * y);
 				e.Player.SendSuccessMessage("Teleported right {0} level{1}.", currentLevel, currentLevel == 1 ? "" : "s");
 			}
@@ -234,7 +235,7 @@ namespace EssentialsPlus
 			else
 			{
 				if (e.Player.HasPermission("essentials.tp.back"))
-					e.Player.GetEssentials().PushBackHistory(e.TPlayer.position);
+					e.Player.GetPlayerInfo().PushBackHistory(e.TPlayer.position);
 				e.Player.Teleport(16 * x, 16 * y + 6);
 				e.Player.SendSuccessMessage("Teleported up {0} level{1}.", currentLevel, currentLevel == 1 ? "" : "s");
 			}
@@ -242,7 +243,7 @@ namespace EssentialsPlus
 
 		public static async void RepeatLast(CommandArgs e)
 		{
-			string lastCommand = e.Player.GetEssentials().LastCommand;
+			string lastCommand = e.Player.GetPlayerInfo().LastCommand;
 			if (String.IsNullOrEmpty(lastCommand))
 			{
 				e.Player.SendErrorMessage("You don't have a last command!");
@@ -251,6 +252,43 @@ namespace EssentialsPlus
 
 			e.Player.SendSuccessMessage("Repeated last command '{0}{1}'!", TShock.Config.CommandSpecifier, lastCommand);
 			await Task.Run(() => TShockAPI.Commands.HandleCommand(e.Player, TShock.Config.CommandSpecifier + lastCommand));
+		}
+
+		public static void Ruler(CommandArgs e)
+		{
+			if (e.Parameters.Count == 0)
+			{
+				if (e.Player.TempPoints.Any(p => p == Point.Zero))
+				{
+					e.Player.SendErrorMessage("Ruler points are not set up!");
+					return;
+				}
+
+				Point p1 = e.Player.TempPoints[0];
+				Point p2 = e.Player.TempPoints[1];
+
+				int x = Math.Abs(p1.X - p2.X);
+				int y = Math.Abs(p1.Y - p2.Y);
+				double cartesian = Math.Sqrt(x * x + y * y);
+				e.Player.SendInfoMessage("Distances: X: {0}, Y: {1}, Cartesian: {2:N3}", x, y, cartesian);
+			}
+			else if (e.Parameters.Count == 1)
+			{
+				if (e.Parameters[0] == "1")
+				{
+					e.Player.AwaitingTempPoint = 1;
+					e.Player.SendInfoMessage("Modify a block to set the first ruler point.");
+				}
+				else if (e.Parameters[0] == "2")
+				{
+					e.Player.AwaitingTempPoint = 2;
+					e.Player.SendInfoMessage("Modify a block to set the second ruler point.");
+				}
+				else
+					e.Player.SendErrorMessage("Invalid syntax! Proper syntax: /ruler [1/2]");
+			}
+			else
+				e.Player.SendErrorMessage("Invalid syntax! Proper syntax: /ruler [1/2]");
 		}
 
 		public static async void Sudo(CommandArgs e)
@@ -269,7 +307,11 @@ namespace EssentialsPlus
 			else
 			{
 				string message = String.Join(" ", e.Parameters.Skip(1));
-				List<string> args = e.Parameters.Skip(2).ToList();
+				if (players[0].HasPermission("essentials.sudo.immune"))
+				{
+					e.Player.SendErrorMessage("You cannot force {0} to execute {1}{2}.", players[0].Name, TShock.Config.CommandSpecifier, message);
+					return;
+				}
 
 				Command command = TShockAPI.Commands.ChatCommands.Where(c => c.HasAlias(e.Parameters[1].ToLowerInvariant())).FirstOrDefault();
 				if (command == null)
@@ -296,6 +338,7 @@ namespace EssentialsPlus
 				if (!e.Player.Group.HasPermission("essentials.sudo.invisible"))
 					players[0].SendInfoMessage("{0} forced you to execute {1}{2}.", e.Player.Name, TShock.Config.CommandSpecifier, message);
 
+				List<string> args = e.Parameters.Skip(2).ToList();
 				try
 				{
 					await Task.Run(() => command.CommandDelegate(new CommandArgs(message, players[0], args)));

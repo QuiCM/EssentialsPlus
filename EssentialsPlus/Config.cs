@@ -15,7 +15,7 @@ namespace EssentialsPlus
 			"back"
 		};
 
-		public int BackPointHistory = 10;
+		public int BackPositionHistory = 10;
 
 		public string MySqlHost = "";
 		public string MySqlDbName = "";
