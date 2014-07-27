@@ -109,7 +109,6 @@ namespace EssentialsPlus
 			(Config = Config.Read(path)).Write(path);
 			#endregion
 			#region Commands
-			Console.WriteLine("Adding commands...");
 			TShockAPI.Commands.ChatCommands.Add(new Command("essentials.tp.back", Commands.Back, "back", "b")
 			{
 				AllowServer = false,

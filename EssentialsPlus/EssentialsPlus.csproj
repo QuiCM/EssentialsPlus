@@ -61,6 +61,7 @@
     <Compile Include="Commands.cs" />
     <Compile Include="Config.cs" />
     <Compile Include="EssentialsPlus.cs" />
+    <Compile Include="Extensions\TileExtensions.cs" />
     <Compile Include="Extensions\TSPlayerExtensions.cs" />
     <Compile Include="Player.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
