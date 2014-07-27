@@ -14,6 +14,203 @@ namespace EssentialsPlus
 	{
 		private static readonly Regex findPattern = new Regex("(\\/?\\w+) (-(\\w+) )?\"*(.+?)\"*$");
 
+		public static async void Find(CommandArgs e)
+		{
+			Match match = null;
+			string switchText = null;
+			string findText = null;
+			List<KeyValuePair<int, string>> itemList = new List<KeyValuePair<int, string>>();
+			List<KeyValuePair<int, string>> npcList = new List<KeyValuePair<int, string>>();
+			StringBuilder sb = new StringBuilder();
+			/*
+			 * Output per item:  Eye of Chtulhu (NPC ID 4)
+			 */
+			string itemTemplate = "{1} ({0} ID {2})";
+			int itemsPerLine = 3;
+			int totalItemCount = 0;
+			int totalLineCount = 0;
+			int maxLineCount = 7;
+
+			/*
+			 * Match groups:
+			 *	0: The string, the whole string and nothing but the string
+			 *	3: The switch text, eg "npc", or "item" (optional)
+			 *	4: The search paramaters. May include spaces and never quotes
+			 */
+			if (findPattern.IsMatch(e.Message) == false
+				|| (match = findPattern.Match(e.Message)) == null
+				|| string.IsNullOrEmpty((findText = match.Groups[4].Value)) == true) {
+				e.Player.SendErrorMessage("/find: Invalid syntax. Usage: /find -[npc|item] <name>");
+				return;
+			}
+
+			if (string.IsNullOrEmpty((switchText = match.Groups[3].Value)) == true) {
+				switchText = "all";
+			}
+
+			if (switchText.Equals("all", StringComparison.InvariantCultureIgnoreCase)) {
+				itemList.AddRange(await FindItemByNameAsync(findText));
+				npcList.AddRange(await FindNPCByNameAsync(findText));
+			} else if (switchText.Equals("npc", StringComparison.InvariantCultureIgnoreCase)) {
+				npcList.AddRange(await FindNPCByNameAsync(findText));
+			} else if (switchText.Equals("item", StringComparison.InvariantCultureIgnoreCase)) {
+				itemList.AddRange(await FindItemByNameAsync(findText));
+			}
+
+			totalItemCount = npcList.Count + itemList.Count;
+			totalLineCount = totalItemCount / itemsPerLine;
+
+			if (totalItemCount == 0) {
+				e.Player.SendInfoMessage("/find: nothing was found for that search criteria.");
+				return;
+			}
+
+			if (totalLineCount > maxLineCount) {
+				e.Player.SendInfoMessage("/find: too many results were returned, please try narrowing your search.");
+				return;
+			}
+
+			/*
+			 * Format items
+			 */
+			for (int i = 0; i < itemList.Count; i++) {
+				KeyValuePair<int, string> item = itemList[i];
+				sb.AppendFormat(itemTemplate, "Item", item.Value, item.Key);
+				if (i % itemsPerLine == 0) {
+					e.Player.SendInfoMessage(sb.ToString());
+					sb.Clear();
+				} else if (i <= itemList.Count - 1) {
+					sb.Append(", ");
+				}
+			}
+
+			if (sb.Length > 0) {
+				e.Player.SendInfoMessage(sb.ToString());
+				sb.Clear();
+			}
+
+			/*
+			 * Format NPCs
+			 */
+			for (int i = 0; i < npcList.Count; i++) {
+				KeyValuePair<int, string> item = npcList[i];
+				sb.AppendFormat(itemTemplate, "NPC", item.Value, item.Key);
+				if (i % itemsPerLine == 0) {
+					e.Player.SendInfoMessage(sb.ToString());
+					sb.Clear();
+				} else if (i <= npcList.Count - 1) {
+					sb.Append(", ");
+				}
+			}
+
+			if (sb.Length > 0) {
+				e.Player.SendInfoMessage(sb.ToString());
+				sb.Clear();
+			}
+		}
+
+		public static async void RepeatLast(CommandArgs e)
+		{
+			string lastCommand = e.Player.GetPlayerInfo().LastCommand;
+			if (String.IsNullOrEmpty(lastCommand))
+			{
+				e.Player.SendErrorMessage("You don't have a last command!");
+				return;
+			}
+
+			e.Player.SendSuccessMessage("Repeated last command '{0}{1}'!", TShock.Config.CommandSpecifier, lastCommand);
+			await Task.Run(() => TShockAPI.Commands.HandleCommand(e.Player, TShock.Config.CommandSpecifier + lastCommand));
+		}
+
+		public static void Ruler(CommandArgs e)
+		{
+			if (e.Parameters.Count == 0)
+			{
+				if (e.Player.TempPoints.Any(p => p == Point.Zero))
+				{
+					e.Player.SendErrorMessage("Ruler points are not set up!");
+					return;
+				}
+
+				Point p1 = e.Player.TempPoints[0];
+				Point p2 = e.Player.TempPoints[1];
+
+				int x = Math.Abs(p1.X - p2.X);
+				int y = Math.Abs(p1.Y - p2.Y);
+				double cartesian = Math.Sqrt(x * x + y * y);
+				e.Player.SendInfoMessage("Distances: X: {0}, Y: {1}, Cartesian: {2:N3}", x, y, cartesian);
+			}
+			else if (e.Parameters.Count == 1)
+			{
+				if (e.Parameters[0] == "1")
+				{
+					e.Player.AwaitingTempPoint = 1;
+					e.Player.SendInfoMessage("Modify a block to set the first ruler point.");
+				}
+				else if (e.Parameters[0] == "2")
+				{
+					e.Player.AwaitingTempPoint = 2;
+					e.Player.SendInfoMessage("Modify a block to set the second ruler point.");
+				}
+				else
+					e.Player.SendErrorMessage("Invalid syntax! Proper syntax: {0}ruler [1/2]", TShock.Config.CommandSpecifier);
+			}
+			else
+				e.Player.SendErrorMessage("Invalid syntax! Proper syntax: {0}ruler [1/2]", TShock.Config.CommandSpecifier);
+		}
+
+		public static async void Sudo(CommandArgs e)
+		{
+			if (e.Parameters.Count < 2)
+			{
+				e.Player.SendErrorMessage("Invalid syntax! Proper syntax: {0}sudo <player> <command...>", TShock.Config.CommandSpecifier);
+				return;
+			}
+
+			List<TSPlayer> players = TShock.Utils.FindPlayer(e.Parameters[0]);
+			if (players.Count == 0)
+				e.Player.SendErrorMessage("Invalid player '{0}'!", e.Parameters[0]);
+			else if (players.Count > 1)
+				e.Player.SendErrorMessage("More than one player matched: {0}", String.Join(", ", players.Select(p => p.Name)));
+			else
+			{
+				string message = String.Join(" ", e.Parameters.Skip(1));
+				if (players[0].HasPermission("essentials.sudo.immune"))
+				{
+					e.Player.SendErrorMessage("You cannot force {0} to execute {1}{2}!", players[0].Name, TShock.Config.CommandSpecifier, message);
+					return;
+				}
+
+				Command command = TShockAPI.Commands.ChatCommands.Where(c => c.HasAlias(e.Parameters[1].ToLowerInvariant())).FirstOrDefault();
+				if (command == null)
+				{
+					e.Player.SendErrorMessage("Invalid command '{0}{1}'!", TShock.Config.CommandSpecifier, e.Parameters[1]);
+					return;
+				}
+
+				if (!e.Player.Group.HasPermission("essentials.sudo.super"))
+				{
+					if (!command.Permissions.Any(s => players[0].Group.HasPermission(s)))
+					{
+						e.Player.SendErrorMessage("{0} cannot execute {1}{2}!", players[0].Name, TShock.Config.CommandSpecifier, message);
+						return;
+					}
+					else if (!command.Permissions.Any(s => e.Player.Group.HasPermission(s)))
+					{
+						e.Player.SendErrorMessage("You cannot execute {0}{1}!", TShock.Config.CommandSpecifier, message);
+						return;
+					}
+				}
+
+				e.Player.SendSuccessMessage("Forced {0} to execute {1}{2}.", players[0].Name, TShock.Config.CommandSpecifier, message);
+				if (!e.Player.Group.HasPermission("essentials.sudo.invisible"))
+					players[0].SendInfoMessage("{0} forced you to execute {1}{2}.", e.Player.Name, TShock.Config.CommandSpecifier, message);
+
+				List<string> args = e.Parameters.Skip(2).ToList();
+				await Task.Run(() => command.CommandDelegate(new CommandArgs(message, players[0], args)));
+			}
+		}
+
 		public static void Back(CommandArgs e)
 		{
 			if (e.Parameters.Count > 1)
@@ -241,224 +438,20 @@ namespace EssentialsPlus
 			}
 		}
 
-		public static async void RepeatLast(CommandArgs e)
-		{
-			string lastCommand = e.Player.GetPlayerInfo().LastCommand;
-			if (String.IsNullOrEmpty(lastCommand))
-			{
-				e.Player.SendErrorMessage("You don't have a last command!");
-				return;
-			}
-
-			e.Player.SendSuccessMessage("Repeated last command '{0}{1}'!", TShock.Config.CommandSpecifier, lastCommand);
-			await Task.Run(() => TShockAPI.Commands.HandleCommand(e.Player, TShock.Config.CommandSpecifier + lastCommand));
-		}
-
-		public static void Ruler(CommandArgs e)
-		{
-			if (e.Parameters.Count == 0)
-			{
-				if (e.Player.TempPoints.Any(p => p == Point.Zero))
-				{
-					e.Player.SendErrorMessage("Ruler points are not set up!");
-					return;
-				}
-
-				Point p1 = e.Player.TempPoints[0];
-				Point p2 = e.Player.TempPoints[1];
-
-				int x = Math.Abs(p1.X - p2.X);
-				int y = Math.Abs(p1.Y - p2.Y);
-				double cartesian = Math.Sqrt(x * x + y * y);
-				e.Player.SendInfoMessage("Distances: X: {0}, Y: {1}, Cartesian: {2:N3}", x, y, cartesian);
-			}
-			else if (e.Parameters.Count == 1)
-			{
-				if (e.Parameters[0] == "1")
-				{
-					e.Player.AwaitingTempPoint = 1;
-					e.Player.SendInfoMessage("Modify a block to set the first ruler point.");
-				}
-				else if (e.Parameters[0] == "2")
-				{
-					e.Player.AwaitingTempPoint = 2;
-					e.Player.SendInfoMessage("Modify a block to set the second ruler point.");
-				}
-				else
-					e.Player.SendErrorMessage("Invalid syntax! Proper syntax: {0}ruler [1/2]", TShock.Config.CommandSpecifier);
-			}
-			else
-				e.Player.SendErrorMessage("Invalid syntax! Proper syntax: {0}ruler [1/2]", TShock.Config.CommandSpecifier);
-		}
-
-		public static async void Sudo(CommandArgs e)
-		{
-			if (e.Parameters.Count < 2)
-			{
-				e.Player.SendErrorMessage("Invalid syntax! Proper syntax: {0}sudo <player> <command...>", TShock.Config.CommandSpecifier);
-				return;
-			}
-
-			List<TSPlayer> players = TShock.Utils.FindPlayer(e.Parameters[0]);
-			if (players.Count == 0)
-				e.Player.SendErrorMessage("Invalid player '{0}'!", e.Parameters[0]);
-			else if (players.Count > 1)
-				e.Player.SendErrorMessage("More than one player matched: {0}", String.Join(", ", players.Select(p => p.Name)));
-			else
-			{
-				string message = String.Join(" ", e.Parameters.Skip(1));
-				if (players[0].HasPermission("essentials.sudo.immune"))
-				{
-					e.Player.SendErrorMessage("You cannot force {0} to execute {1}{2}!", players[0].Name, TShock.Config.CommandSpecifier, message);
-					return;
-				}
-
-				Command command = TShockAPI.Commands.ChatCommands.Where(c => c.HasAlias(e.Parameters[1].ToLowerInvariant())).FirstOrDefault();
-				if (command == null)
-				{
-					e.Player.SendErrorMessage("Invalid command '{0}{1}'!", TShock.Config.CommandSpecifier, e.Parameters[1]);
-					return;
-				}
-
-				if (!e.Player.Group.HasPermission("essentials.sudo.super"))
-				{
-					if (!command.Permissions.Any(s => players[0].Group.HasPermission(s)))
-					{
-						e.Player.SendErrorMessage("{0} cannot execute {1}{2}!", players[0].Name, TShock.Config.CommandSpecifier, message);
-						return;
-					}
-					else if (!command.Permissions.Any(s => e.Player.Group.HasPermission(s)))
-					{
-						e.Player.SendErrorMessage("You cannot execute {0}{1}!", TShock.Config.CommandSpecifier, message);
-						return;
-					}
-				}
-
-				e.Player.SendSuccessMessage("Forced {0} to execute {1}{2}.", players[0].Name, TShock.Config.CommandSpecifier, message);
-				if (!e.Player.Group.HasPermission("essentials.sudo.invisible"))
-					players[0].SendInfoMessage("{0} forced you to execute {1}{2}.", e.Player.Name, TShock.Config.CommandSpecifier, message);
-
-				List<string> args = e.Parameters.Skip(2).ToList();
-				try
-				{
-					await Task.Run(() => command.CommandDelegate(new CommandArgs(message, players[0], args)));
-				}
-				catch (Exception ex)
-				{
-					e.Player.SendErrorMessage("Command failed, check logs for more details.");
-					Log.Error(ex.ToString());
-				}
-			}
-		}
-
-		public static async void Find(CommandArgs e)
-		{
-			Match match = null;
-			string switchText = null;
-			string findText = null;
-			List<KeyValuePair<int, string>> itemList = new List<KeyValuePair<int,string>>();
-			List<KeyValuePair<int, string>> npcList = new List<KeyValuePair<int,string>>();
-			StringBuilder sb = new StringBuilder();
-			/*
-			 * Output per item:  Eye of Chtulhu (NPC ID 4)
-			 */
-			string itemTemplate = "{1} ({0} ID {2})";
-			int itemsPerLine = 3;
-			int totalItemCount = 0;
-			int totalLineCount = 0;
-			int maxLineCount = 7;
-
-			/*
-			 * Match groups:
-			 *	0: The string, the whole string and nothing but the string
-			 *	3: The switch text, eg "npc", or "item" (optional)
-			 *	4: The search paramaters. May include spaces and never quotes
-			 */
-			if (findPattern.IsMatch(e.Message) == false
-				|| (match = findPattern.Match(e.Message)) == null
-				|| string.IsNullOrEmpty((findText = match.Groups[4].Value)) == true) {
-				e.Player.SendErrorMessage("/find: Invalid syntax. Usage: /find -[npc|item] <name>");
-				return;
-			}
-
-			if (string.IsNullOrEmpty((switchText = match.Groups[3].Value)) == true) {
-				switchText = "all";
-			}
-
-			if (switchText.Equals("all", StringComparison.InvariantCultureIgnoreCase)) {
-				itemList.AddRange(await FindItemByNameAsync(findText));
-				npcList.AddRange(await FindNPCByNameAsync(findText));
-			} else if (switchText.Equals("npc", StringComparison.InvariantCultureIgnoreCase)) {
-				npcList.AddRange(await FindNPCByNameAsync(findText));
-			} else if (switchText.Equals("item", StringComparison.InvariantCultureIgnoreCase)) {
-				itemList.AddRange(await FindItemByNameAsync(findText));
-			}
-
-			totalItemCount = npcList.Count + itemList.Count;
-			totalLineCount = totalItemCount / itemsPerLine;
-
-			if (totalItemCount == 0) {
-				e.Player.SendInfoMessage("/find: nothing was found for that search criteria.");
-				return;
-			}
-
-			if (totalLineCount > maxLineCount) {
-				e.Player.SendInfoMessage("/find: too many results were returned, please try narrowing your search.");
-				return;
-			}
-
-			/*
-			 * Format items
-			 */
-			for (int i = 0; i < itemList.Count; i++) {
-				KeyValuePair<int, string> item = itemList[i];
-				sb.AppendFormat(itemTemplate, "Item", item.Value, item.Key);
-				if (i % itemsPerLine == 0) {
-					e.Player.SendInfoMessage(sb.ToString());
-					sb.Clear();
-				} else if (i <= itemList.Count - 1) {
-					sb.Append(", ");
-				}
-			}
-
-			if (sb.Length > 0) {
-				e.Player.SendInfoMessage(sb.ToString());
-				sb.Clear();
-			}
-
-			/*
-			 * Format NPCs
-			 */
-			for (int i = 0; i < npcList.Count; i++) {
-				KeyValuePair<int, string> item = npcList[i];
-				sb.AppendFormat(itemTemplate, "NPC", item.Value, item.Key);
-				if (i % itemsPerLine == 0) {
-					e.Player.SendInfoMessage(sb.ToString());
-					sb.Clear();
-				} else if (i <= npcList.Count - 1) {
-					sb.Append(", ");
-				}
-			}
-
-			if (sb.Length > 0) {
-				e.Player.SendInfoMessage(sb.ToString());
-				sb.Clear();
-			}
-		}
-
 		private static async Task<List<KeyValuePair<int, string>>> FindItemByNameAsync(string findText)
 		{
-			List<KeyValuePair<int, string>> itemList = new List<KeyValuePair<int, string>>();
+			var itemList = new List<KeyValuePair<int, string>>();
 
 			await Task.Run(() => {
+				for (int i = -48; i < 0; i++) {
+					var item = new Item();
+					item.netDefaults(i);
+					if (item.name.ContainsInsensitive(findText))
+						itemList.Add(new KeyValuePair<int, string>(i, Main.itemName[i]));
+				}
 				for (int i = 0; i < Terraria.Main.itemName.Count(); i++) {
-					Terraria.Item item = new Terraria.Item();
-					item.SetDefaults(Terraria.Main.itemName[i]);
-
-					if (item.name.ContainsInsensitive(findText) == false) {
-						continue;
-					}
-					itemList.Add(new KeyValuePair<int, string>(item.netID, item.name));
+					if (Main.itemName[i].ContainsInsensitive(findText))
+						itemList.Add(new KeyValuePair<int, string>(i, Main.itemName[i]));
 				}
 			});
 
@@ -466,18 +459,18 @@ namespace EssentialsPlus
 		}
 		private static async Task<List<KeyValuePair<int, string>>> FindNPCByNameAsync(string findText)
 		{
-			List<KeyValuePair<int, string>> npcList = new List<KeyValuePair<int, string>>();
+			var npcList = new List<KeyValuePair<int, string>>();
 
 			await Task.Run(() => {
+				for (int i = -65; i < 0; i++) {
+					var npc = new NPC();
+					npc.netDefaults(i);
+					if (npc.name.ContainsInsensitive(findText))
+						npcList.Add(new KeyValuePair<int, string>(i, npc.name));
+				}
 				for (int i = 0; i < Terraria.Main.npcName.Count(); i++) {
-					Terraria.NPC npc = new Terraria.NPC();
-					npc.SetDefaults(Terraria.Main.npcName[i]);
-
-					if (npc.name.ContainsInsensitive(findText) == false) {
-						continue;
-					}
-
-					npcList.Add(new KeyValuePair<int, string>(npc.netID, npc.name));
+					if (Main.npcName[i].ContainsInsensitive(findText))
+						npcList.Add(new KeyValuePair<int, string>(i, Main.npcName[i]));
 				}
 			});
 

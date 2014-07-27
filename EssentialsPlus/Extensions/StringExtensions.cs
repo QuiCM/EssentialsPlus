@@ -4,8 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EssentialsPlus.Extensions {
-	public static class StringExtensions {
+namespace EssentialsPlus.Extensions
+{
+	public static class StringExtensions
+	{
 		/// <summary>
 		/// Performs a case insensitive "Contains"
 		/// </summary>
@@ -15,11 +17,8 @@ namespace EssentialsPlus.Extensions {
 		/// </returns>
 		public static bool ContainsInsensitive(this string str, string findText)
 		{
-			if (string.IsNullOrEmpty(str) == true
-				|| string.IsNullOrEmpty(findText) == true) {
-					return false;
-			}
-
+			if (String.IsNullOrEmpty(str) || String.IsNullOrEmpty(findText))
+				return false;
 			return str.IndexOf(findText, StringComparison.OrdinalIgnoreCase) >= 0;
 		}
 	}
