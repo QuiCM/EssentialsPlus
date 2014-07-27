@@ -30,15 +30,15 @@ namespace EssentialsPlus
 			}
 
 			Player player = e.Player.GetEssentialsPlayer();
-			if (player.BackPoints.Count == 0)
+			if (player.BackHistoryCount == 0)
 			{
 				e.Player.SendErrorMessage("Could not teleport back!");
 				return;
 			}
 
-			steps = Math.Min(steps, player.BackPoints.Count);
+			steps = Math.Min(steps, player.BackHistoryCount);
 			e.Player.SendSuccessMessage("Teleported back {0} step{1}.", steps, steps == 1 ? "" : "s");
-			player.Teleport(player.BackPoints[--steps]);
+			player.Teleport(player.PopBackHistory(steps));
 		}
 		public static async void Down(CommandArgs e)
 		{
@@ -84,7 +84,7 @@ namespace EssentialsPlus
 			else
 			{
 				if (e.Player.HasPermission("essentials.tp.back"))
-					e.Player.GetEssentialsPlayer().AddBackPoint(e.TPlayer.position);
+					e.Player.GetEssentialsPlayer().PushBackHistory(e.TPlayer.position);
 				e.Player.Teleport(16 * x, 16 * y - 10);
 				e.Player.SendSuccessMessage("Teleported down {0} level{1}.", currentLevel, currentLevel == 1 ? "" : "s");
 			}
@@ -134,7 +134,7 @@ namespace EssentialsPlus
 			else
 			{
 				if (e.Player.HasPermission("essentials.tp.back"))
-					e.Player.GetEssentialsPlayer().AddBackPoint(e.TPlayer.position);
+					e.Player.GetEssentialsPlayer().PushBackHistory(e.TPlayer.position);
 				e.Player.Teleport(16 * x + 12, 16 * y);
 				e.Player.SendSuccessMessage("Teleported left {0} level{1}.", currentLevel, currentLevel == 1 ? "" : "s");
 			}
@@ -184,7 +184,7 @@ namespace EssentialsPlus
 			else
 			{
 				if (e.Player.HasPermission("essentials.tp.back"))
-					e.Player.GetEssentialsPlayer().AddBackPoint(e.TPlayer.position);
+					e.Player.GetEssentialsPlayer().PushBackHistory(e.TPlayer.position);
 				e.Player.Teleport(16 * x, 16 * y);
 				e.Player.SendSuccessMessage("Teleported right {0} level{1}.", currentLevel, currentLevel == 1 ? "" : "s");
 			}
@@ -234,7 +234,7 @@ namespace EssentialsPlus
 			else
 			{
 				if (e.Player.HasPermission("essentials.tp.back"))
-					e.Player.GetEssentialsPlayer().AddBackPoint(e.TPlayer.position);
+					e.Player.GetEssentialsPlayer().PushBackHistory(e.TPlayer.position);
 				e.Player.Teleport(16 * x, 16 * y + 6);
 				e.Player.SendSuccessMessage("Teleported up {0} level{1}.", currentLevel, currentLevel == 1 ? "" : "s");
 			}

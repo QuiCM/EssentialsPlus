@@ -80,8 +80,8 @@ namespace EssentialsPlus
 			{
 				#region Packet 45 - PlayerKillMe
 				case PacketTypes.PlayerKillMe:
-					if (player.HasPermission("essentials.tp.back"))
-						player.AddBackPoint(player.TPlayer.position);
+					if (tsplayer.HasPermission("essentials.tp.back"))
+						player.PushBackHistory(player.TPlayer.position);
 					return;
 				#endregion
 			}
@@ -153,7 +153,7 @@ namespace EssentialsPlus
 			if (command == null || !command.Permissions.Any(s => e.Player.HasPermission(s)))
 				return;
 
-			if (e.Player.TPlayer.hostile && command.Names.Intersect(Config.DisabledCommandsInPvp).Any())
+			if (e.Player.TPlayer.hostile && command.Names.Select(s => s.ToLowerInvariant()).Intersect(Config.DisabledCommandsInPvp.Select(s => s.ToLowerInvariant())).Any())
 			{
 				e.Player.SendErrorMessage("This command is blocked while in PvP!");
 				e.Handled = true;

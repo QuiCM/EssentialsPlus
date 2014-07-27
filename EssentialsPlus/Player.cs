@@ -11,11 +11,11 @@ namespace EssentialsPlus
 {
 	public class Player
 	{
-		private List<Vector2> backPoints = new List<Vector2>();
+		private List<Vector2> backHistory = new List<Vector2>();
 
-		public ReadOnlyCollection<Vector2> BackPoints
+		public int BackHistoryCount
 		{
-			get { return backPoints.AsReadOnly(); }
+			get { return backHistory.Count; }
 		}
 		public int Index
 		{
@@ -32,16 +32,19 @@ namespace EssentialsPlus
 			TSPlayer = tsplayer;
 		}
 
-		public void AddBackPoint(Vector2 vector)
+		public Vector2 PopBackHistory(int steps)
 		{
-			backPoints.Insert(0, vector);
-			if (backPoints.Count > EssentialsPlus.Config.BackPointHistory)
-				backPoints.RemoveAt(backPoints.Count - 1);
+			Vector2 vector = backHistory[steps];
+			backHistory.RemoveRange(0, steps);
+			return vector;
 		}
-		public bool HasPermission(string permission)
+		public void PushBackHistory(Vector2 vector)
 		{
-			return TSPlayer != null && TSPlayer.HasPermission(permission);
+			backHistory.Insert(0, vector);
+			if (backHistory.Count > EssentialsPlus.Config.BackPointHistory)
+				backHistory.RemoveAt(backHistory.Count - 1);
 		}
+
 		public void SendErrorMessage(string format, params object[] args)
 		{
 			if (TSPlayer != null)
@@ -62,6 +65,7 @@ namespace EssentialsPlus
 			if (TSPlayer != null)
 				TSPlayer.SendWarningMessage(format, args);
 		}
+
 		public void Teleport(Vector2 vector)
 		{
 			if (TSPlayer != null)
