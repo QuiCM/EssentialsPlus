@@ -21,6 +21,7 @@ namespace EssentialsPlus
 		{
 			get { return TSPlayer.Index; }
 		}
+		public string LastCommand { get; set; }
 		public Terraria.Player TPlayer
 		{
 			get { return TSPlayer.TPlayer; }

@@ -240,6 +240,19 @@ namespace EssentialsPlus
 			}
 		}
 
+		public static async void RepeatLast(CommandArgs e)
+		{
+			Player player = e.Player.GetEssentialsPlayer();
+			if (String.IsNullOrEmpty(player.LastCommand))
+			{
+				e.Player.SendErrorMessage("You don't have a last command!");
+				return;
+			}
+
+			e.Player.SendSuccessMessage("Repeated last command '{0}{1}'!", TShock.Config.CommandSpecifier, player.LastCommand);
+			await Task.Run(() => TShockAPI.Commands.HandleCommand(e.Player, TShock.Config.CommandSpecifier + player.LastCommand));
+		}
+
 		public static async void Sudo(CommandArgs e)
 		{
 			if (e.Parameters.Count < 2)

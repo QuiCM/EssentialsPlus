@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using TShockAPI;
@@ -9,22 +10,18 @@ namespace EssentialsPlus.Extensions
 {
 	public static class TSPlayerExtensions
 	{
-		private static Dictionary<TSPlayer, Player> players = new Dictionary<TSPlayer, Player>();
+		private static ConditionalWeakTable<TSPlayer, Player> players = new ConditionalWeakTable<TSPlayer, Player>();
 
-		public static void AttachEssentialsPlayer(this TSPlayer tsplayer)
-		{
-			if (!players.ContainsKey(tsplayer))
-				players.Add(tsplayer, new Player(tsplayer));
-		}
-		public static void DetachEssentialsPlayer(this TSPlayer tsplayer)
-		{
-			players.Remove(tsplayer);
-		}
 		public static Player GetEssentialsPlayer(this TSPlayer tsplayer)
 		{
-			if (!players.ContainsKey(tsplayer))
-				return null;
-			return players[tsplayer];
+			Player player;
+			if (!players.TryGetValue(tsplayer, out player))
+			{
+				player = new Player(tsplayer);
+				players.Add(tsplayer, player);
+				return player;
+			}
+			return player;
 		}
 		public static bool HasPermission(this TSPlayer tsplayer, string permission)
 		{

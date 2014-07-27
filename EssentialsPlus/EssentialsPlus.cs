@@ -47,9 +47,7 @@ namespace EssentialsPlus
 
 				ServerApi.Hooks.GameInitialize.Deregister(this, OnInitialize);
 				ServerApi.Hooks.NetGetData.Deregister(this, OnGetData);
-				ServerApi.Hooks.NetGreetPlayer.Deregister(this, OnGreetPlayer);
 				ServerApi.Hooks.NetSendData.Deregister(this, OnSendData);
-				ServerApi.Hooks.ServerLeave.Deregister(this, OnLeave);
 			}
 		}
 		public override void Initialize()
@@ -58,9 +56,7 @@ namespace EssentialsPlus
 
 			ServerApi.Hooks.GameInitialize.Register(this, OnInitialize);
 			ServerApi.Hooks.NetGetData.Register(this, OnGetData);
-			ServerApi.Hooks.NetGreetPlayer.Register(this, OnGreetPlayer);
 			ServerApi.Hooks.NetSendData.Register(this, OnSendData);
-			ServerApi.Hooks.ServerLeave.Register(this, OnLeave);
 		}
 
 		private void OnGetData(GetDataEventArgs e)
@@ -81,19 +77,10 @@ namespace EssentialsPlus
 				#region Packet 45 - PlayerKillMe
 				case PacketTypes.PlayerKillMe:
 					if (tsplayer.HasPermission("essentials.tp.back"))
-						player.PushBackHistory(player.TPlayer.position);
+						player.PushBackHistory(tsplayer.TPlayer.position);
 					return;
 				#endregion
 			}
-		}
-		private void OnGreetPlayer(GreetPlayerEventArgs e)
-		{
-			if (e.Handled)
-				return;
-
-			TSPlayer tsplayer = TShock.Players[e.Who];
-			if (tsplayer != null)
-				tsplayer.AttachEssentialsPlayer();
 		}
 		private void OnInitialize(EventArgs e)
 		{
@@ -102,6 +89,20 @@ namespace EssentialsPlus
 			(Config = Config.Read(path)).Write(path);
 			#endregion
 			#region Commands
+			TShockAPI.Commands.ChatCommands.Add(new Command("essentials.find", Commands.Find, "find") {
+				HelpText = "Finds an item and/or NPC with the specified name."
+			});
+
+			TShockAPI.Commands.ChatCommands.Add(new Command("essentials.lastcommand", Commands.RepeatLast, "=")
+			{
+				HelpText = "Allows you to repeat your last command."
+			});
+
+			TShockAPI.Commands.ChatCommands.Add(new Command("essentials.sudo", Commands.Sudo, "sudo")
+			{
+				HelpText = "Allows you to execute a command as another user."
+			});
+
 			TShockAPI.Commands.ChatCommands.Add(new Command("essentials.tp.back", Commands.Back, "back", "b")
 			{
 				AllowServer = false,
@@ -127,22 +128,7 @@ namespace EssentialsPlus
 				AllowServer = false,
 				HelpText = "Teleports you up through a layer of blocks."
 			});
-
-			TShockAPI.Commands.ChatCommands.Add(new Command("essentials.sudo", Commands.Sudo, "sudo")
-			{
-				HelpText = "Allows you to execute a command as another user."
-			});
-
-			TShockAPI.Commands.ChatCommands.Add(new Command("essentials.find", Commands.Find, "find") {
-				HelpText = "Finds an item and/or NPC with the specified name."
-			});
 			#endregion
-		}
-		private void OnLeave(LeaveEventArgs e)
-		{
-			TSPlayer tsplayer = TShock.Players[e.Who];
-			if (tsplayer != null)
-				tsplayer.DetachEssentialsPlayer();
 		}
 		private void OnPlayerCommand(PlayerCommandEventArgs e)
 		{
@@ -150,7 +136,7 @@ namespace EssentialsPlus
 				return;
 
 			Command command = e.CommandList.FirstOrDefault();
-			if (command == null || !command.Permissions.Any(s => e.Player.HasPermission(s)))
+			if (command == null || (command.Permissions.Any() && !command.Permissions.Any(s => e.Player.HasPermission(s))))
 				return;
 
 			if (e.Player.TPlayer.hostile && command.Names.Select(s => s.ToLowerInvariant()).Intersect(Config.DisabledCommandsInPvp.Select(s => s.ToLowerInvariant())).Any())
@@ -158,6 +144,8 @@ namespace EssentialsPlus
 				e.Player.SendErrorMessage("This command is blocked while in PvP!");
 				e.Handled = true;
 			}
+			else if (e.Player.HasPermission("essentials.lastcommand") && command.CommandDelegate != Commands.RepeatLast)
+				e.Player.GetEssentialsPlayer().LastCommand = e.CommandText;
 		}
 		private void OnSendData(SendDataEventArgs e)
 		{
