@@ -285,10 +285,10 @@ namespace EssentialsPlus
 					e.Player.SendInfoMessage("Modify a block to set the second ruler point.");
 				}
 				else
-					e.Player.SendErrorMessage("Invalid syntax! Proper syntax: /ruler [1/2]");
+					e.Player.SendErrorMessage("Invalid syntax! Proper syntax: {0}ruler [1/2]", TShock.Config.CommandSpecifier);
 			}
 			else
-				e.Player.SendErrorMessage("Invalid syntax! Proper syntax: /ruler [1/2]");
+				e.Player.SendErrorMessage("Invalid syntax! Proper syntax: {0}ruler [1/2]", TShock.Config.CommandSpecifier);
 		}
 
 		public static async void Sudo(CommandArgs e)
@@ -309,7 +309,7 @@ namespace EssentialsPlus
 				string message = String.Join(" ", e.Parameters.Skip(1));
 				if (players[0].HasPermission("essentials.sudo.immune"))
 				{
-					e.Player.SendErrorMessage("You cannot force {0} to execute {1}{2}.", players[0].Name, TShock.Config.CommandSpecifier, message);
+					e.Player.SendErrorMessage("You cannot force {0} to execute {1}{2}!", players[0].Name, TShock.Config.CommandSpecifier, message);
 					return;
 				}
 
