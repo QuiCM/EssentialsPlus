@@ -35,7 +35,7 @@ namespace EssentialsPlus
 
 		public Vector2 PopBackHistory(int steps)
 		{
-			Vector2 vector = backHistory[steps];
+			Vector2 vector = backHistory[steps - 1];
 			backHistory.RemoveRange(0, steps);
 			return vector;
 		}

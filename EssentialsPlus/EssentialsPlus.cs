@@ -68,16 +68,12 @@ namespace EssentialsPlus
 			if (tsplayer == null)
 				return;
 
-			Player player = tsplayer.GetEssentialsPlayer();
-			if (player == null)
-				return;
-
 			switch (e.MsgID)
 			{
 				#region Packet 45 - PlayerKillMe
 				case PacketTypes.PlayerKillMe:
 					if (tsplayer.HasPermission("essentials.tp.back"))
-						player.PushBackHistory(tsplayer.TPlayer.position);
+						tsplayer.GetEssentials().PushBackHistory(tsplayer.TPlayer.position);
 					return;
 				#endregion
 			}
@@ -145,7 +141,7 @@ namespace EssentialsPlus
 				e.Handled = true;
 			}
 			else if (e.Player.HasPermission("essentials.lastcommand") && command.CommandDelegate != Commands.RepeatLast)
-				e.Player.GetEssentialsPlayer().LastCommand = e.CommandText;
+				e.Player.GetEssentials().LastCommand = e.CommandText;
 		}
 		private void OnSendData(SendDataEventArgs e)
 		{

@@ -29,7 +29,7 @@ namespace EssentialsPlus
 				return;
 			}
 
-			Player player = e.Player.GetEssentialsPlayer();
+			Player player = e.Player.GetEssentials();
 			if (player.BackHistoryCount == 0)
 			{
 				e.Player.SendErrorMessage("Could not teleport back!");
@@ -84,7 +84,7 @@ namespace EssentialsPlus
 			else
 			{
 				if (e.Player.HasPermission("essentials.tp.back"))
-					e.Player.GetEssentialsPlayer().PushBackHistory(e.TPlayer.position);
+					e.Player.GetEssentials().PushBackHistory(e.TPlayer.position);
 				e.Player.Teleport(16 * x, 16 * y - 10);
 				e.Player.SendSuccessMessage("Teleported down {0} level{1}.", currentLevel, currentLevel == 1 ? "" : "s");
 			}
@@ -134,7 +134,7 @@ namespace EssentialsPlus
 			else
 			{
 				if (e.Player.HasPermission("essentials.tp.back"))
-					e.Player.GetEssentialsPlayer().PushBackHistory(e.TPlayer.position);
+					e.Player.GetEssentials().PushBackHistory(e.TPlayer.position);
 				e.Player.Teleport(16 * x + 12, 16 * y);
 				e.Player.SendSuccessMessage("Teleported left {0} level{1}.", currentLevel, currentLevel == 1 ? "" : "s");
 			}
@@ -184,7 +184,7 @@ namespace EssentialsPlus
 			else
 			{
 				if (e.Player.HasPermission("essentials.tp.back"))
-					e.Player.GetEssentialsPlayer().PushBackHistory(e.TPlayer.position);
+					e.Player.GetEssentials().PushBackHistory(e.TPlayer.position);
 				e.Player.Teleport(16 * x, 16 * y);
 				e.Player.SendSuccessMessage("Teleported right {0} level{1}.", currentLevel, currentLevel == 1 ? "" : "s");
 			}
@@ -234,7 +234,7 @@ namespace EssentialsPlus
 			else
 			{
 				if (e.Player.HasPermission("essentials.tp.back"))
-					e.Player.GetEssentialsPlayer().PushBackHistory(e.TPlayer.position);
+					e.Player.GetEssentials().PushBackHistory(e.TPlayer.position);
 				e.Player.Teleport(16 * x, 16 * y + 6);
 				e.Player.SendSuccessMessage("Teleported up {0} level{1}.", currentLevel, currentLevel == 1 ? "" : "s");
 			}
@@ -242,15 +242,15 @@ namespace EssentialsPlus
 
 		public static async void RepeatLast(CommandArgs e)
 		{
-			Player player = e.Player.GetEssentialsPlayer();
-			if (String.IsNullOrEmpty(player.LastCommand))
+			string lastCommand = e.Player.GetEssentials().LastCommand;
+			if (String.IsNullOrEmpty(lastCommand))
 			{
 				e.Player.SendErrorMessage("You don't have a last command!");
 				return;
 			}
 
-			e.Player.SendSuccessMessage("Repeated last command '{0}{1}'!", TShock.Config.CommandSpecifier, player.LastCommand);
-			await Task.Run(() => TShockAPI.Commands.HandleCommand(e.Player, TShock.Config.CommandSpecifier + player.LastCommand));
+			e.Player.SendSuccessMessage("Repeated last command '{0}{1}'!", TShock.Config.CommandSpecifier, lastCommand);
+			await Task.Run(() => TShockAPI.Commands.HandleCommand(e.Player, TShock.Config.CommandSpecifier + lastCommand));
 		}
 
 		public static async void Sudo(CommandArgs e)

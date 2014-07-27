@@ -12,16 +12,9 @@ namespace EssentialsPlus.Extensions
 	{
 		private static ConditionalWeakTable<TSPlayer, Player> players = new ConditionalWeakTable<TSPlayer, Player>();
 
-		public static Player GetEssentialsPlayer(this TSPlayer tsplayer)
+		public static Player GetEssentials(this TSPlayer tsplayer)
 		{
-			Player player;
-			if (!players.TryGetValue(tsplayer, out player))
-			{
-				player = new Player(tsplayer);
-				players.Add(tsplayer, player);
-				return player;
-			}
-			return player;
+			return players.GetValue(tsplayer, tsp => new Player(tsp));
 		}
 		public static bool HasPermission(this TSPlayer tsplayer, string permission)
 		{
