@@ -1,13 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using EssentialsPlus.Db;
 using EssentialsPlus.Extensions;
+using Mono.Data.Sqlite;
+using MySql.Data.MySqlClient;
 using Terraria;
 using TerrariaApi.Server;
 using TShockAPI;
+using TShockAPI.DB;
+using TShockAPI.Extensions;
 using TShockAPI.Hooks;
 
 namespace EssentialsPlus
@@ -15,7 +21,9 @@ namespace EssentialsPlus
 	[ApiVersion(1, 16)]
 	public class EssentialsPlus : TerrariaPlugin
 	{
-		public static Config Config = new Config();
+		public static Config Config { get; private set; }
+		public static IDbConnection Db { get; private set; }
+		public static HomeManager Homes { get; private set; }
 
 		public override string Author
 		{
@@ -43,41 +51,49 @@ namespace EssentialsPlus
 		{
 			if (disposing)
 			{
+				GeneralHooks.ReloadEvent -= OnReload;
 				PlayerHooks.PlayerCommand -= OnPlayerCommand;
 
 				ServerApi.Hooks.GameInitialize.Deregister(this, OnInitialize);
+				ServerApi.Hooks.GamePostInitialize.Deregister(this, OnPostInitialize);
 				ServerApi.Hooks.NetGetData.Deregister(this, OnGetData);
 				ServerApi.Hooks.NetSendData.Deregister(this, OnSendData);
 			}
 		}
 		public override void Initialize()
 		{
+			GeneralHooks.ReloadEvent += OnReload;
 			PlayerHooks.PlayerCommand += OnPlayerCommand;
 
 			ServerApi.Hooks.GameInitialize.Register(this, OnInitialize);
+			ServerApi.Hooks.GamePostInitialize.Register(this, OnPostInitialize);
 			ServerApi.Hooks.NetGetData.Register(this, OnGetData);
 			ServerApi.Hooks.NetSendData.Register(this, OnSendData);
 		}
 
-		private void OnGetData(GetDataEventArgs e)
+		private async void OnReload(ReloadEventArgs e)
 		{
-			if (e.Handled)
-				return;
-
-			TSPlayer tsplayer = TShock.Players[e.Msg.whoAmI];
-			if (tsplayer == null)
-				return;
-
-			switch (e.MsgID)
-			{
-				#region Packet 45 - PlayerKillMe
-				case PacketTypes.PlayerKillMe:
-					if (tsplayer.HasPermission("essentials.tp.back"))
-						tsplayer.GetPlayerInfo().PushBackHistory(tsplayer.TPlayer.position);
-					return;
-				#endregion
-			}
+			await Homes.ReloadAsync();
+			e.Player.SendSuccessMessage("[EssentialsPlus] Reloaded homes!");
 		}
+		private void OnPlayerCommand(PlayerCommandEventArgs e)
+		{
+			if (e.Handled || e.Player == null)
+				return;
+
+			Command command = e.CommandList.FirstOrDefault();
+			if (command == null || (command.Permissions.Any() && !command.Permissions.Any(s => e.Player.HasPermission(s))))
+				return;
+
+			if (e.Player.TPlayer.hostile && command.Names.Select(s => s.ToLowerInvariant()).Intersect(Config.DisabledCommandsInPvp.Select(s => s.ToLowerInvariant())).Any())
+			{
+				e.Player.SendErrorMessage("This command is blocked while in PvP!");
+				e.Handled = true;
+			}
+			else if (e.Player.HasPermission("essentials.lastcommand") && command.CommandDelegate != Commands.RepeatLast)
+				e.Player.GetPlayerInfo().LastCommand = e.CommandText;
+		}
+
 		private void OnInitialize(EventArgs e)
 		{
 			#region Config
@@ -85,8 +101,20 @@ namespace EssentialsPlus
 			(Config = Config.Read(path)).Write(path);
 			#endregion
 			#region Commands
-			TShockAPI.Commands.ChatCommands.Add(new Command("essentials.find", Commands.Find, "find") {
+			TShockAPI.Commands.ChatCommands.Add(new Command("essentials.find", Commands.Find, "find")
+			{
 				HelpText = "Finds an item and/or NPC with the specified name."
+			});
+
+			TShockAPI.Commands.ChatCommands.Add(new Command("essentials.home.set", Commands.SetHome, "sethome")
+			{
+				AllowServer = false,
+				HelpText = "Sets you a home point."
+			});
+			TShockAPI.Commands.ChatCommands.Add(new Command("essentials.home.tp", Commands.MyHome, "myhome")
+			{
+				AllowServer = false,
+				HelpText = "Teleports you to one of your home points."
 			});
 
 			TShockAPI.Commands.ChatCommands.Add(new Command("essentials.lastcommand", Commands.RepeatLast, "=")
@@ -131,23 +159,48 @@ namespace EssentialsPlus
 				HelpText = "Teleports you up through a layer of blocks."
 			});
 			#endregion
-		}
-		private void OnPlayerCommand(PlayerCommandEventArgs e)
-		{
-			if (e.Handled || e.Player == null)
-				return;
-
-			Command command = e.CommandList.FirstOrDefault();
-			if (command == null || (command.Permissions.Any() && !command.Permissions.Any(s => e.Player.HasPermission(s))))
-				return;
-
-			if (e.Player.TPlayer.hostile && command.Names.Select(s => s.ToLowerInvariant()).Intersect(Config.DisabledCommandsInPvp.Select(s => s.ToLowerInvariant())).Any())
+			#region Database
+			if (TShock.Config.StorageType.Equals("mysql", StringComparison.OrdinalIgnoreCase))
 			{
-				e.Player.SendErrorMessage("This command is blocked while in PvP!");
-				e.Handled = true;
+				string[] host = Config.MySqlHost.Split(':');
+				Db = new MySqlConnection()
+				{
+					ConnectionString = String.Format("Server={0}; Port={1}; Database={2}; Uid={3}; Pwd={4};",
+						host[0],
+						host.Length == 1 ? "3306" : host[1],
+						Config.MySqlDbName,
+						Config.MySqlUsername,
+						Config.MySqlPassword)
+				};
 			}
-			else if (e.Player.HasPermission("essentials.lastcommand") && command.CommandDelegate != Commands.RepeatLast)
-				e.Player.GetPlayerInfo().LastCommand = e.CommandText;
+			else if (TShock.Config.StorageType.Equals("sqlite", StringComparison.OrdinalIgnoreCase))
+				Db = new SqliteConnection("uri=file://" + Path.Combine(TShock.SavePath, "essentials.sqlite") + ",Version=3");
+			else
+				throw new InvalidOperationException("Invalid storage type!");
+			#endregion
+		}
+		private void OnPostInitialize(EventArgs e)
+		{
+			Homes = new HomeManager(Db);
+		}
+		private void OnGetData(GetDataEventArgs e)
+		{
+			if (e.Handled)
+				return;
+
+			TSPlayer tsplayer = TShock.Players[e.Msg.whoAmI];
+			if (tsplayer == null)
+				return;
+
+			switch (e.MsgID)
+			{
+				#region Packet 45 - PlayerKillMe
+				case PacketTypes.PlayerKillMe:
+					if (tsplayer.HasPermission("essentials.tp.back"))
+						tsplayer.GetPlayerInfo().PushBackHistory(tsplayer.TPlayer.position);
+					return;
+				#endregion
+			}
 		}
 		private void OnSendData(SendDataEventArgs e)
 		{

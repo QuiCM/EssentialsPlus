@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using EssentialsPlus.Db;
 using EssentialsPlus.Extensions;
 using Terraria;
 using TShockAPI;
@@ -107,6 +108,68 @@ namespace EssentialsPlus
 				e.Player.SendInfoMessage(sb.ToString());
 				sb.Clear();
 			}
+		}
+
+		public static void MyHome(CommandArgs e)
+		{
+			if (e.Parameters.Count > 1)
+			{
+				e.Player.SendErrorMessage("Invalid syntax! Proper syntax: /sethome <home name>");
+				return;
+			}
+
+			string homeName = e.Parameters.Count == 1 ? e.Parameters[0] : "home";
+			Home home = EssentialsPlus.Homes.GetHome(e.Player, homeName);
+			if (home != null)
+			{
+				e.Player.Teleport(home.X, home.Y);
+				e.Player.SendSuccessMessage("Teleported you to your home '{0}'.", homeName);
+			}
+			else
+				e.Player.SendErrorMessage("Invalid home '{0}'!", homeName);
+		}
+		public static async void SetHome(CommandArgs e)
+		{
+			if (e.Parameters.Count > 1)
+			{
+				e.Player.SendErrorMessage("Invalid syntax! Proper syntax: /sethome <home name>");
+				return;
+			}
+
+			string homeName = e.Parameters.Count == 1 ? e.Parameters[0] : "home";
+			if (EssentialsPlus.Homes.GetHome(e.Player, homeName) != null)
+			{
+				if (await EssentialsPlus.Homes.UpdateHomeAsync(e.Player, homeName, e.Player.X, e.Player.Y))
+					e.Player.SendSuccessMessage("Updated your home '{0}'.", homeName);
+				else
+					e.Player.SendErrorMessage("Could not update home, check logs for more details.");
+				return;
+			}
+
+			if (!e.Player.HasPermission("essentials.home.set.*"))
+			{
+				int maxHomes = 1;
+				foreach (string permission in e.Player.Group.TotalPermissions)
+				{
+					Match match = Regex.Match(permission, @"^essentials\.home\.set\.(\d+)$");
+					if (match.Success && match.Value == permission)
+					{
+						int temp = Convert.ToInt32(match.Groups[1].Value);
+						if (temp > maxHomes)
+							maxHomes = temp;
+					}
+				}
+				if (EssentialsPlus.Homes.GetHomes(e.Player).Count + 1 >= maxHomes)
+				{
+					e.Player.SendErrorMessage("You have reached your home limit!");
+					return;
+				}
+			}
+
+			if (await EssentialsPlus.Homes.AddHomeAsync(e.Player, homeName, e.Player.X, e.Player.Y))
+				e.Player.SendSuccessMessage("Set your home '{0}'.", homeName);
+			else
+				e.Player.SendErrorMessage("Could not set home, check logs for more details.");
 		}
 
 		public static async void RepeatLast(CommandArgs e)

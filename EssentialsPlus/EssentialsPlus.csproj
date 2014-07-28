@@ -60,6 +60,8 @@
   <ItemGroup>
     <Compile Include="Commands.cs" />
     <Compile Include="Config.cs" />
+    <Compile Include="Db\Home.cs" />
+    <Compile Include="Db\HomeManager.cs" />
     <Compile Include="EssentialsPlus.cs" />
     <Compile Include="Extensions\TileExtensions.cs" />
     <Compile Include="Extensions\TSPlayerExtensions.cs" />
