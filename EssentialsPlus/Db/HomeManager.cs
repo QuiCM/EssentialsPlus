@@ -15,8 +15,8 @@ namespace EssentialsPlus.Db
 	public class HomeManager
 	{
 		private IDbConnection db;
-		private object dbLock = new object(); 
 		private List<Home> homes = new List<Home>();
+		private object syncLock = new object();
 
 		public HomeManager(IDbConnection db)
 		{
@@ -43,11 +43,13 @@ namespace EssentialsPlus.Db
 		{
 			try
 			{
-				homes.Add(new Home(player.UserID, name, x, y));
 				return await Task.Run(() =>
 				{
-					lock (dbLock)
+					lock (syncLock)
+					{
+						homes.Add(new Home(player.UserID, name, x, y));
 						return db.Query("INSERT INTO Homes (UserID, Name, X, Y, WorldID) VALUES (@0, @1, @2, @3, @4)", player.UserID, name, x, y, Main.worldID) > 0;
+					}
 				});
 			}
 			catch (Exception ex)
@@ -60,16 +62,17 @@ namespace EssentialsPlus.Db
 		{
 			try
 			{
-				homes.RemoveAll(h => h.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase) && h.UserID == player.UserID);
-
 				string query = db.GetSqlType() == SqlType.Mysql ?
 					"DELETE FROM Homes WHERE UserID = @0 AND Name = @1 AND WorldID = @2" :
 					"DELETE FROM Homes WHERE UserID = @0 AND Name = @1 AND WorldID = @2 COLLATE NOCASE";
 
 				return await Task.Run(() =>
 				{
-					lock (dbLock)
+					lock (syncLock)
+					{
+						homes.RemoveAll(h => h.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase) && h.UserID == player.UserID);
 						return db.Query(query, player.UserID, name, Main.worldID) > 0;
+					}
 				});
 			}
 			catch (Exception ex)
@@ -78,23 +81,31 @@ namespace EssentialsPlus.Db
 				return false;
 			}
 		}
-		public Home Get(TSPlayer player, string name)
+		public async Task<Home> Get(TSPlayer player, string name)
 		{
-			return homes.FirstOrDefault(h => h.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase) && h.UserID == player.UserID);
+			return await Task.Run(() =>
+			{
+				lock (syncLock)
+					return homes.FirstOrDefault(h => h.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase) && h.UserID == player.UserID);
+			});
 		}
-		public List<Home> GetAll(TSPlayer player)
+		public async Task<List<Home>> GetAll(TSPlayer player)
 		{
-			return homes.Where(h => h.UserID == player.UserID).ToList();
+			return await Task.Run(() =>
+			{
+				lock (syncLock)
+					return homes.Where(h => h.UserID == player.UserID).ToList();
+			});
 		}
 		public async Task<bool> ReloadAsync()
 		{
-			homes.Clear();
 			try
 			{
 				return await Task.Run(() =>
 				{
-					lock (dbLock)
+					lock (syncLock)
 					{
+						homes.Clear();
 						using (QueryResult result = db.QueryReader("SELECT * FROM Homes"))
 						{
 							while (result.Read())
@@ -112,9 +123,6 @@ namespace EssentialsPlus.Db
 		}
 		public async Task<bool> UpdateAsync(TSPlayer player, string name, float x, float y)
 		{
-			homes.RemoveAll(h => h.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase) && h.UserID == player.UserID);
-			homes.Add(new Home(player.UserID, name, x, y));
-
 			try
 			{
 				string query = db.GetSqlType() == SqlType.Mysql ?
@@ -123,8 +131,12 @@ namespace EssentialsPlus.Db
 
 				return await Task.Run(() =>
 				{
-					lock (dbLock)
+					lock (syncLock)
+					{
+						homes.RemoveAll(h => h.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase) && h.UserID == player.UserID);
+						homes.Add(new Home(player.UserID, name, x, y));
 						return db.Query(query, x, y, player.UserID, name, Main.worldID) > 0;
+					}
 				});
 			}
 			catch (Exception ex)

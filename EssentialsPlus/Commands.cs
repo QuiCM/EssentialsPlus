@@ -119,7 +119,7 @@ namespace EssentialsPlus
 			}
 
 			string homeName = e.Parameters.Count == 1 ? e.Parameters[0] : "home";
-			Home home = EssentialsPlus.Homes.Get(e.Player, homeName);
+			Home home = await EssentialsPlus.Homes.Get(e.Player, homeName);
 			if (home != null)
 			{
 				if (await EssentialsPlus.Homes.DeleteAsync(e.Player, homeName))
@@ -130,7 +130,7 @@ namespace EssentialsPlus
 			else
 				e.Player.SendErrorMessage("Invalid home '{0}'!", homeName);
 		}
-		public static void MyHome(CommandArgs e)
+		public static async void MyHome(CommandArgs e)
 		{
 			if (e.Parameters.Count > 1)
 			{
@@ -139,7 +139,7 @@ namespace EssentialsPlus
 			}
 
 			string homeName = e.Parameters.Count == 1 ? e.Parameters[0] : "home";
-			Home home = EssentialsPlus.Homes.Get(e.Player, homeName);
+			Home home = await EssentialsPlus.Homes.Get(e.Player, homeName);
 			if (home != null)
 			{
 				e.Player.Teleport(home.X, home.Y);
@@ -175,7 +175,7 @@ namespace EssentialsPlus
 					if (match.Success && match.Value == permission)
 						maxHomes = Math.Max(maxHomes, Convert.ToInt32(match.Groups[1].Value));
 				}
-				if (EssentialsPlus.Homes.GetAll(e.Player).Count + 1 >= maxHomes)
+				if ((await EssentialsPlus.Homes.GetAll(e.Player)).Count + 1 >= maxHomes)
 				{
 					e.Player.SendErrorMessage("You have reached your home limit!");
 					return;
@@ -186,6 +186,20 @@ namespace EssentialsPlus
 				e.Player.SendSuccessMessage("Set your home '{0}'.", homeName);
 			else
 				e.Player.SendErrorMessage("Could not set home, check logs for more details.");
+		}
+
+		public static async void KickAll(CommandArgs e)
+		{
+			string reason = e.Parameters.Count == 0 ? "Misbehavior." : String.Join(" ", e.Parameters);
+
+			await Task.WhenAll(TShock.Players.Where(p => p != null && p.Active && p.HasPermission("essentials.kickall.immune")).Select(p => Task.Run(() =>
+				{
+					if (p.IsLoggedIn)
+						p.SaveServerCharacter();
+					p.Disconnect("Kicked: " + reason);
+				})));
+
+			e.Player.SendSuccessMessage("Kicked everyone for '{0}'.", reason);
 		}
 
 		public static async void RepeatLast(CommandArgs e)
@@ -213,7 +227,6 @@ namespace EssentialsPlus
 
 				Point p1 = e.Player.TempPoints[0];
 				Point p2 = e.Player.TempPoints[1];
-
 				int x = Math.Abs(p1.X - p2.X);
 				int y = Math.Abs(p1.Y - p2.Y);
 				double cartesian = Math.Sqrt(x * x + y * y);

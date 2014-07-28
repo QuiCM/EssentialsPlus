@@ -59,6 +59,7 @@ namespace EssentialsPlus
 				ServerApi.Hooks.NetGetData.Deregister(this, OnGetData);
 				ServerApi.Hooks.NetSendData.Deregister(this, OnSendData);
 			}
+			base.Dispose(disposing);
 		}
 		public override void Initialize()
 		{
@@ -120,6 +121,11 @@ namespace EssentialsPlus
 			{
 				AllowServer = false,
 				HelpText = "Teleports you to one of your home points."
+			});
+
+			TShockAPI.Commands.ChatCommands.Add(new Command("essentials.kickall", Commands.KickAll, "kickall")
+			{
+				HelpText = "Kicks everyone on the server."
 			});
 
 			TShockAPI.Commands.ChatCommands.Add(new Command("essentials.lastcommand", Commands.RepeatLast, "=")
