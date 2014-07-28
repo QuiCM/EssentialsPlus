@@ -39,7 +39,7 @@ namespace EssentialsPlus.Db
 			}
 		}
 
-		public async Task<bool> AddHomeAsync(TSPlayer player, string name, float x, float y)
+		public async Task<bool> AddAsync(TSPlayer player, string name, float x, float y)
 		{
 			try
 			{
@@ -56,7 +56,7 @@ namespace EssentialsPlus.Db
 				return false;
 			}
 		}
-		public async Task<bool> DeleteHomeAsync(TSPlayer player, string name)
+		public async Task<bool> DeleteAsync(TSPlayer player, string name)
 		{
 			try
 			{
@@ -78,11 +78,11 @@ namespace EssentialsPlus.Db
 				return false;
 			}
 		}
-		public Home GetHome(TSPlayer player, string name)
+		public Home Get(TSPlayer player, string name)
 		{
 			return homes.FirstOrDefault(h => h.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase) && h.UserID == player.UserID);
 		}
-		public List<Home> GetHomes(TSPlayer player)
+		public List<Home> GetAll(TSPlayer player)
 		{
 			return homes.Where(h => h.UserID == player.UserID).ToList();
 		}
@@ -110,7 +110,7 @@ namespace EssentialsPlus.Db
 				return false;
 			}
 		}
-		public async Task<bool> UpdateHomeAsync(TSPlayer player, string name, float x, float y)
+		public async Task<bool> UpdateAsync(TSPlayer player, string name, float x, float y)
 		{
 			try
 			{

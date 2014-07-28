@@ -106,6 +106,11 @@ namespace EssentialsPlus
 				HelpText = "Finds an item and/or NPC with the specified name."
 			});
 
+			TShockAPI.Commands.ChatCommands.Add(new Command("essentials.home.delete", Commands.DeleteHome, "delhome")
+			{
+				AllowServer = false,
+				HelpText = "Deletes one of your home points."
+			});
 			TShockAPI.Commands.ChatCommands.Add(new Command("essentials.home.set", Commands.SetHome, "sethome")
 			{
 				AllowServer = false,

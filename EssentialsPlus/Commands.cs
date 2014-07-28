@@ -110,6 +110,26 @@ namespace EssentialsPlus
 			}
 		}
 
+		public static async void DeleteHome(CommandArgs e)
+		{
+			if (e.Parameters.Count > 1)
+			{
+				e.Player.SendErrorMessage("Invalid syntax! Proper syntax: /delhome <home name>");
+				return;
+			}
+
+			string homeName = e.Parameters.Count == 1 ? e.Parameters[0] : "home";
+			Home home = EssentialsPlus.Homes.Get(e.Player, homeName);
+			if (home != null)
+			{
+				if (await EssentialsPlus.Homes.DeleteAsync(e.Player, homeName))
+					e.Player.SendSuccessMessage("Deleted your home '{0}'.", homeName);
+				else
+					e.Player.SendErrorMessage("Could not delete home, check logs for more details.");
+			}
+			else
+				e.Player.SendErrorMessage("Invalid home '{0}'!", homeName);
+		}
 		public static void MyHome(CommandArgs e)
 		{
 			if (e.Parameters.Count > 1)
@@ -119,7 +139,7 @@ namespace EssentialsPlus
 			}
 
 			string homeName = e.Parameters.Count == 1 ? e.Parameters[0] : "home";
-			Home home = EssentialsPlus.Homes.GetHome(e.Player, homeName);
+			Home home = EssentialsPlus.Homes.Get(e.Player, homeName);
 			if (home != null)
 			{
 				e.Player.Teleport(home.X, home.Y);
@@ -137,9 +157,9 @@ namespace EssentialsPlus
 			}
 
 			string homeName = e.Parameters.Count == 1 ? e.Parameters[0] : "home";
-			if (EssentialsPlus.Homes.GetHome(e.Player, homeName) != null)
+			if (EssentialsPlus.Homes.Get(e.Player, homeName) != null)
 			{
-				if (await EssentialsPlus.Homes.UpdateHomeAsync(e.Player, homeName, e.Player.X, e.Player.Y))
+				if (await EssentialsPlus.Homes.UpdateAsync(e.Player, homeName, e.Player.X, e.Player.Y))
 					e.Player.SendSuccessMessage("Updated your home '{0}'.", homeName);
 				else
 					e.Player.SendErrorMessage("Could not update home, check logs for more details.");
@@ -153,20 +173,16 @@ namespace EssentialsPlus
 				{
 					Match match = Regex.Match(permission, @"^essentials\.home\.set\.(\d+)$");
 					if (match.Success && match.Value == permission)
-					{
-						int temp = Convert.ToInt32(match.Groups[1].Value);
-						if (temp > maxHomes)
-							maxHomes = temp;
-					}
+						maxHomes = Math.Max(maxHomes, Convert.ToInt32(match.Groups[1].Value));
 				}
-				if (EssentialsPlus.Homes.GetHomes(e.Player).Count + 1 >= maxHomes)
+				if (EssentialsPlus.Homes.GetAll(e.Player).Count + 1 >= maxHomes)
 				{
 					e.Player.SendErrorMessage("You have reached your home limit!");
 					return;
 				}
 			}
 
-			if (await EssentialsPlus.Homes.AddHomeAsync(e.Player, homeName, e.Player.X, e.Player.Y))
+			if (await EssentialsPlus.Homes.AddAsync(e.Player, homeName, e.Player.X, e.Player.Y))
 				e.Player.SendSuccessMessage("Set your home '{0}'.", homeName);
 			else
 				e.Player.SendErrorMessage("Could not set home, check logs for more details.");
