@@ -112,10 +112,11 @@ namespace EssentialsPlus.Db
 		}
 		public async Task<bool> UpdateAsync(TSPlayer player, string name, float x, float y)
 		{
+			homes.RemoveAll(h => h.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase) && h.UserID == player.UserID);
+			homes.Add(new Home(player.UserID, name, x, y));
+
 			try
 			{
-				homes.RemoveAll(h => h.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase) && h.UserID == player.UserID);
-
 				string query = db.GetSqlType() == SqlType.Mysql ?
 					"UPDATE Homes SET X = @0, Y = @1 WHERE UserID = @2 AND Name = @3 AND WorldID = @4" :
 					"UPDATE Homes SET X = @0, Y = @1 WHERE UserID = @2 AND Name = @3 AND WorldID = @4 COLLATE NOCASE";

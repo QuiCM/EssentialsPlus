@@ -134,7 +134,7 @@ namespace EssentialsPlus
 		{
 			if (e.Parameters.Count > 1)
 			{
-				e.Player.SendErrorMessage("Invalid syntax! Proper syntax: {0}sethome <home name>", TShock.Config.CommandSpecifier);
+				e.Player.SendErrorMessage("Invalid syntax! Proper syntax: {0}myhome <home name>", TShock.Config.CommandSpecifier);
 				return;
 			}
 
@@ -356,7 +356,7 @@ namespace EssentialsPlus
 				}
 			});
 
-			if (currentLevel <= 0)
+			if (currentLevel == 0)
 				e.Player.SendErrorMessage("Could not teleport down!");
 			else
 			{
@@ -406,7 +406,7 @@ namespace EssentialsPlus
 				}
 			});
 
-			if (currentLevel <= 0)
+			if (currentLevel == 0)
 				e.Player.SendErrorMessage("Could not teleport left!");
 			else
 			{
@@ -456,7 +456,7 @@ namespace EssentialsPlus
 				}
 			});
 
-			if (currentLevel <= 0)
+			if (currentLevel == 0)
 				e.Player.SendErrorMessage("Could not teleport right!");
 			else
 			{
@@ -506,7 +506,7 @@ namespace EssentialsPlus
 				}
 			});
 
-			if (currentLevel <= 0)
+			if (currentLevel == 0)
 				e.Player.SendErrorMessage("Could not teleport up!");
 			else
 			{
