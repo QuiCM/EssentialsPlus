@@ -114,7 +114,7 @@ namespace EssentialsPlus
 		{
 			if (e.Parameters.Count > 1)
 			{
-				e.Player.SendErrorMessage("Invalid syntax! Proper syntax: /delhome <home name>");
+				e.Player.SendErrorMessage("Invalid syntax! Proper syntax: {0}delhome <home name>", TShock.Config.CommandSpecifier);
 				return;
 			}
 
@@ -134,7 +134,7 @@ namespace EssentialsPlus
 		{
 			if (e.Parameters.Count > 1)
 			{
-				e.Player.SendErrorMessage("Invalid syntax! Proper syntax: /sethome <home name>");
+				e.Player.SendErrorMessage("Invalid syntax! Proper syntax: {0}sethome <home name>", TShock.Config.CommandSpecifier);
 				return;
 			}
 
@@ -152,7 +152,7 @@ namespace EssentialsPlus
 		{
 			if (e.Parameters.Count > 1)
 			{
-				e.Player.SendErrorMessage("Invalid syntax! Proper syntax: /sethome <home name>");
+				e.Player.SendErrorMessage("Invalid syntax! Proper syntax: {0}sethome <home name>", TShock.Config.CommandSpecifier);
 				return;
 			}
 
