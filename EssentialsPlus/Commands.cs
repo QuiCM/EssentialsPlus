@@ -192,7 +192,7 @@ namespace EssentialsPlus
 		{
 			string reason = e.Parameters.Count == 0 ? "Misbehavior." : String.Join(" ", e.Parameters);
 
-			await Task.WhenAll(TShock.Players.Where(p => p != null && p.Active && p.HasPermission("essentials.kickall.immune")).Select(p => Task.Run(() =>
+			await Task.WhenAll(TShock.Players.Where(p => p != null && p.Active && !p.HasPermission("essentials.kickall.immune")).Select(p => Task.Run(() =>
 				{
 					if (p.IsLoggedIn)
 						p.SaveServerCharacter();
