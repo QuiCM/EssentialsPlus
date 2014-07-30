@@ -16,9 +16,5 @@ namespace EssentialsPlus.Extensions
 		{
 			return players.GetOrCreateValue(tsplayer);
 		}
-		public static bool HasPermission(this TSPlayer tsplayer, string permission)
-		{
-			return tsplayer.Group != null && tsplayer.Group.HasPermission(permission);
-		}
 	}
 }

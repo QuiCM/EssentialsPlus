@@ -83,7 +83,7 @@ namespace EssentialsPlus
 				return;
 
 			Command command = e.CommandList.FirstOrDefault();
-			if (command == null || (command.Permissions.Any() && !command.Permissions.Any(s => e.Player.HasPermission(s))))
+			if (command == null || (command.Permissions.Any() && !command.Permissions.Any(s => e.Player.Group.HasPermission(s))))
 				return;
 
 			if (e.Player.TPlayer.hostile && command.Names.Select(s => s.ToLowerInvariant()).Intersect(Config.DisabledCommandsInPvp.Select(s => s.ToLowerInvariant())).Any())
@@ -91,7 +91,7 @@ namespace EssentialsPlus
 				e.Player.SendErrorMessage("This command is blocked while in PvP!");
 				e.Handled = true;
 			}
-			else if (e.Player.HasPermission("essentials.lastcommand") && command.CommandDelegate != Commands.RepeatLast)
+			else if (e.Player.Group.HasPermission("essentials.lastcommand") && command.CommandDelegate != Commands.RepeatLast)
 				e.Player.GetPlayerInfo().LastCommand = e.CommandText;
 		}
 
@@ -207,7 +207,7 @@ namespace EssentialsPlus
 			{
 				#region Packet 45 - PlayerKillMe
 				case PacketTypes.PlayerKillMe:
-					if (tsplayer.HasPermission("essentials.tp.back"))
+					if (tsplayer.Group.HasPermission("essentials.tp.back"))
 						tsplayer.GetPlayerInfo().PushBackHistory(tsplayer.TPlayer.position);
 					return;
 				#endregion

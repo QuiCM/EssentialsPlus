@@ -63,6 +63,7 @@
     <Compile Include="Db\Home.cs" />
     <Compile Include="Db\HomeManager.cs" />
     <Compile Include="EssentialsPlus.cs" />
+    <Compile Include="Extensions\GroupExtensions.cs" />
     <Compile Include="Extensions\TileExtensions.cs" />
     <Compile Include="Extensions\TSPlayerExtensions.cs" />
     <Compile Include="PlayerInfo.cs" />
