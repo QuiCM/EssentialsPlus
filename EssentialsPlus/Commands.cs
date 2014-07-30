@@ -13,100 +13,115 @@ namespace EssentialsPlus
 {
 	public static class Commands
 	{
-		private static readonly Regex findPattern = new Regex("(\\/?\\w+) (-(\\w+) )?\"*(.+?)\"*$");
-
 		public static async void Find(CommandArgs e)
 		{
-			Match match = null;
-			string switchText = null;
-			string findText = null;
-			List<KeyValuePair<int, string>> itemList = new List<KeyValuePair<int, string>>();
-			List<KeyValuePair<int, string>> npcList = new List<KeyValuePair<int, string>>();
-			StringBuilder sb = new StringBuilder();
-			/*
-			 * Output per item:  Eye of Chtulhu (NPC ID 4)
-			 */
-			string itemTemplate = "{1} ({0} ID {2})";
-			int itemsPerLine = 3;
-			int totalItemCount = 0;
-			int totalLineCount = 0;
-			int maxLineCount = 7;
-
-			/*
-			 * Match groups:
-			 *	0: The string, the whole string and nothing but the string
-			 *	3: The switch text, eg "npc", or "item" (optional)
-			 *	4: The search paramaters. May include spaces and never quotes
-			 */
-			if (findPattern.IsMatch(e.Message) == false
-				|| (match = findPattern.Match(e.Message)) == null
-				|| string.IsNullOrEmpty((findText = match.Groups[4].Value)) == true) {
-				e.Player.SendErrorMessage("/find: Invalid syntax. Usage: /find -[npc|item] <name>");
+			var regex = new Regex(@"^\w+ -(\w+) (.+?) ?(\d*)$");
+			Match match = regex.Match(e.Message);
+			if (!match.Success)
+			{
+				e.Player.SendErrorMessage("Invalid syntax! Proper syntax: {0}find <-switch> <name...> [page]", TShock.Config.CommandSpecifier);
+				e.Player.SendSuccessMessage("Valid {0}find switches:", TShock.Config.CommandSpecifier);
+				e.Player.SendInfoMessage("-c, -command: Finds a command.");
+				e.Player.SendInfoMessage("-i, -item: Finds an item.");
+				e.Player.SendInfoMessage("-n, -npc: Finds an NPC.");
 				return;
 			}
 
-			if (string.IsNullOrEmpty((switchText = match.Groups[3].Value)) == true) {
-				switchText = "all";
-			}
-
-			if (switchText.Equals("all", StringComparison.InvariantCultureIgnoreCase)) {
-				itemList.AddRange(await FindItemByNameAsync(findText));
-				npcList.AddRange(await FindNPCByNameAsync(findText));
-			} else if (switchText.Equals("npc", StringComparison.InvariantCultureIgnoreCase)) {
-				npcList.AddRange(await FindNPCByNameAsync(findText));
-			} else if (switchText.Equals("item", StringComparison.InvariantCultureIgnoreCase)) {
-				itemList.AddRange(await FindItemByNameAsync(findText));
-			}
-
-			totalItemCount = npcList.Count + itemList.Count;
-			totalLineCount = totalItemCount / itemsPerLine;
-
-			if (totalItemCount == 0) {
-				e.Player.SendInfoMessage("/find: nothing was found for that search criteria.");
+			int page = 1;
+			if (!String.IsNullOrEmpty(match.Groups[3].Value) && (!int.TryParse(match.Groups[3].Value, out page) || page <= 0))
+			{
+				e.Player.SendErrorMessage("Invalid page '{0}'!", match.Groups[3].Value);
 				return;
 			}
 
-			if (totalLineCount > maxLineCount) {
-				e.Player.SendInfoMessage("/find: too many results were returned, please try narrowing your search.");
-				return;
-			}
+			switch (match.Groups[1].Value.ToLowerInvariant())
+			{
+				#region Command
+				case "c":
+				case "command":
+					var commands = new List<string>();
 
-			/*
-			 * Format items
-			 */
-			for (int i = 0; i < itemList.Count; i++) {
-				KeyValuePair<int, string> item = itemList[i];
-				sb.AppendFormat(itemTemplate, "Item", item.Value, item.Key);
-				if (i % itemsPerLine == 0) {
-					e.Player.SendInfoMessage(sb.ToString());
-					sb.Clear();
-				} else if (i <= itemList.Count - 1) {
-					sb.Append(", ");
-				}
-			}
+					await Task.Run(() =>
+					{
+						foreach (Command command in TShockAPI.Commands.ChatCommands.Where(c => c.Names.Any(s => s.ContainsInsensitive(match.Groups[2].Value))))
+							commands.Add(String.Format("{0} (Permission: {1})", command.Name, command.Permissions.FirstOrDefault()));
+					});
 
-			if (sb.Length > 0) {
-				e.Player.SendInfoMessage(sb.ToString());
-				sb.Clear();
-			}
+					PaginationTools.SendPage(e.Player, page, commands,
+						new PaginationTools.Settings
+						{
+							HeaderFormat = "Found Commands ({0}/{1}):",
+							FooterFormat = String.Format("Type /find -command {0} {{0}} for more", match.Groups[2].Value),
+							NothingToDisplayString = "No commands were found."
+						});
+					return;
+				#endregion
+				#region Item
+				case "i":
+				case "item":
+					var items = new List<string>();
 
-			/*
-			 * Format NPCs
-			 */
-			for (int i = 0; i < npcList.Count; i++) {
-				KeyValuePair<int, string> item = npcList[i];
-				sb.AppendFormat(itemTemplate, "NPC", item.Value, item.Key);
-				if (i % itemsPerLine == 0) {
-					e.Player.SendInfoMessage(sb.ToString());
-					sb.Clear();
-				} else if (i <= npcList.Count - 1) {
-					sb.Append(", ");
-				}
-			}
+					await Task.Run(() =>
+					{
+						for (int i = -48; i < 0; i++)
+						{
+							var item = new Item();
+							item.netDefaults(i);
+							if (item.name.ContainsInsensitive(match.Groups[2].Value))
+								items.Add(String.Format("{0} (ID: {1})", item.name, i));
+						}
+						for (int i = 0; i < Main.itemName.Length; i++)
+						{
+							if (Main.itemName[i].ContainsInsensitive(match.Groups[2].Value))
+								items.Add(String.Format("{0} (ID: {1})", Main.itemName[i], i));
+						}
+					});
 
-			if (sb.Length > 0) {
-				e.Player.SendInfoMessage(sb.ToString());
-				sb.Clear();
+					PaginationTools.SendPage(e.Player, page, items,
+						new PaginationTools.Settings
+						{
+							HeaderFormat = "Found Items ({0}/{1}):",
+							FooterFormat = String.Format("Type /find -item {0} {{0}} for more", match.Groups[2].Value),
+							NothingToDisplayString = "No items were found."
+						});
+					return;
+				#endregion
+				#region NPC
+				case "n":
+				case "npc":
+					var npcs = new List<string>();
+
+					await Task.Run(() =>
+					{
+						for (int i = -65; i < 0; i++)
+						{
+							var npc = new NPC();
+							npc.netDefaults(i);
+							if (npc.name.ContainsInsensitive(match.Groups[2].Value))
+								npcs.Add(String.Format("{0} (ID: {1})", npc.name, i));
+						}
+						for (int i = 0; i < Terraria.Main.npcName.Count(); i++)
+						{
+							if (Main.npcName[i].ContainsInsensitive(match.Groups[2].Value))
+								npcs.Add(String.Format("{0} (ID: {1})", Main.npcName[i], i));
+						}
+					});
+
+					PaginationTools.SendPage(e.Player, page, npcs,
+						new PaginationTools.Settings
+						{
+							HeaderFormat = "Found NPCs ({0}/{1}):",
+							FooterFormat = String.Format("Type /find -npc {0} {{0}} for more", match.Groups[2].Value),
+							NothingToDisplayString = "No NPCs were found.",
+						});
+					return;
+				#endregion
+				default:
+					e.Player.SendSuccessMessage("Valid {0}find switches:", TShock.Config.CommandSpecifier);
+					e.Player.SendInfoMessage("-c, -command: Finds a command.");
+					e.Player.SendInfoMessage("-i, -item: Finds an item.");
+					e.Player.SendInfoMessage("-n, -npc: Finds an NPC.");
+					return;
 			}
 		}
 
@@ -261,7 +276,6 @@ namespace EssentialsPlus
 		{
 			var regex = new Regex(@"^\w+(?: -(\w+))* (?:""(.+?)""|([^\s]*?)) (.+)$");
 			Match match = regex.Match(e.Message);
-
 			if (!match.Success)
 			{
 				e.Player.SendErrorMessage("Invalid syntax! Proper syntax: {0}sudo [-switches...] <player> <command...>", TShock.Config.CommandSpecifier);
@@ -312,7 +326,11 @@ namespace EssentialsPlus
 					players[0].SendInfoMessage("{0} forced you to execute {1}{2}.", e.Player.Name, TShock.Config.CommandSpecifier, command);
 
 				var fakePlayer = new TSPlayer(players[0].Index);
+				fakePlayer.AwaitingName = players[0].AwaitingName;
+				fakePlayer.AwaitingNameParameters = players[0].AwaitingNameParameters;
+				fakePlayer.AwaitingTempPoint = players[0].AwaitingTempPoint;
 				fakePlayer.Group = force ? new SuperAdminGroup() : players[0].Group;
+				fakePlayer.TempPoints = players[0].TempPoints;
 
 				await Task.Run(() => TShockAPI.Commands.HandleCommand(fakePlayer, TShock.Config.CommandSpecifier + command));
 
@@ -338,16 +356,16 @@ namespace EssentialsPlus
 				return;
 			}
 
-			PlayerInfo player = e.Player.GetPlayerInfo();
-			if (player.BackHistoryCount == 0)
+			PlayerInfo info = e.Player.GetPlayerInfo();
+			if (info.BackHistoryCount == 0)
 			{
 				e.Player.SendErrorMessage("Could not teleport back!");
 				return;
 			}
 
-			steps = Math.Min(steps, player.BackHistoryCount);
+			steps = Math.Min(steps, info.BackHistoryCount);
 			e.Player.SendSuccessMessage("Teleported back {0} step{1}.", steps, steps == 1 ? "" : "s");
-			Vector2 vector = player.PopBackHistory(steps);
+			Vector2 vector = info.PopBackHistory(steps);
 			e.Player.Teleport(vector.X, vector.Y);
 		}
 		public static async void Down(CommandArgs e)
@@ -548,45 +566,6 @@ namespace EssentialsPlus
 				e.Player.Teleport(16 * x, 16 * y + 6);
 				e.Player.SendSuccessMessage("Teleported up {0} level{1}.", currentLevel, currentLevel == 1 ? "" : "s");
 			}
-		}
-
-		private static async Task<List<KeyValuePair<int, string>>> FindItemByNameAsync(string findText)
-		{
-			var itemList = new List<KeyValuePair<int, string>>();
-
-			await Task.Run(() => {
-				for (int i = -48; i < 0; i++) {
-					var item = new Item();
-					item.netDefaults(i);
-					if (item.name.ContainsInsensitive(findText))
-						itemList.Add(new KeyValuePair<int, string>(i, Main.itemName[i]));
-				}
-				for (int i = 0; i < Terraria.Main.itemName.Count(); i++) {
-					if (Main.itemName[i].ContainsInsensitive(findText))
-						itemList.Add(new KeyValuePair<int, string>(i, Main.itemName[i]));
-				}
-			});
-
-			return itemList;
-		}
-		private static async Task<List<KeyValuePair<int, string>>> FindNPCByNameAsync(string findText)
-		{
-			var npcList = new List<KeyValuePair<int, string>>();
-
-			await Task.Run(() => {
-				for (int i = -65; i < 0; i++) {
-					var npc = new NPC();
-					npc.netDefaults(i);
-					if (npc.name.ContainsInsensitive(findText))
-						npcList.Add(new KeyValuePair<int, string>(i, npc.name));
-				}
-				for (int i = 0; i < Terraria.Main.npcName.Count(); i++) {
-					if (Main.npcName[i].ContainsInsensitive(findText))
-						npcList.Add(new KeyValuePair<int, string>(i, Main.npcName[i]));
-				}
-			});
-
-			return npcList;
 		}
 	}
 }
