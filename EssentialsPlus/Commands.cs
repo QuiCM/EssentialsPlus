@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using EssentialsPlus.Db;
 using EssentialsPlus.Extensions;
 using Terraria;
 using TShockAPI;
-using System.Text.RegularExpressions;
 
 namespace EssentialsPlus
 {
@@ -274,7 +275,7 @@ namespace EssentialsPlus
 
 		public static async void Sudo(CommandArgs e)
 		{
-			var regex = new Regex(@"^\w+(?: -(\w+))* (?:""(.+?)""|([^\s]*?)) (.+)$");
+			var regex = new Regex(String.Format(@"^\w+(?: -(\w+))* (?:""(.+?)""|([^\s]*?)) (?:{0})?(.+)$", TShock.Config.CommandSpecifier));
 			Match match = regex.Match(e.Message);
 			if (!match.Success)
 			{
@@ -338,6 +339,69 @@ namespace EssentialsPlus
 				players[0].AwaitingNameParameters = fakePlayer.AwaitingNameParameters;
 				players[0].AwaitingTempPoint = fakePlayer.AwaitingTempPoint;
 				players[0].TempPoints = fakePlayer.TempPoints;
+			}
+		}
+
+		public static async void TimeCmd(CommandArgs e)
+		{
+			var regex = new Regex(String.Format(@"^\w+(?: -(\w+))* (\w+) (?:{0})?(.+)$", TShock.Config.CommandSpecifier));
+			Match match = regex.Match(e.Message);
+			if (!match.Success)
+			{
+				e.Player.SendErrorMessage("Invalid syntax! Proper syntax: {0}timecmd [-switches...] <time> <command...>", TShock.Config.CommandSpecifier);
+				e.Player.SendSuccessMessage("Valid {0}timecmd switches:", TShock.Config.CommandSpecifier);
+				e.Player.SendInfoMessage("-r, -repeat: Repeats the time command indefinitely.");
+				return;
+			}
+
+			bool repeat = false;
+			foreach (Capture capture in match.Groups[1].Captures)
+			{
+				switch (capture.Value.ToLowerInvariant())
+				{
+					case "r":
+					case "repeat":
+						repeat = true;
+						break;
+					default:
+						e.Player.SendSuccessMessage("Valid {0}timecmd switches:", TShock.Config.CommandSpecifier);
+						e.Player.SendInfoMessage("-r, -repeat: Repeats the time command indefinitely.");
+						return;
+				}
+			}
+
+			int seconds;
+			if (!TShock.Utils.TryParseTime(match.Groups[2].Value, out seconds) || seconds <= 0)
+			{
+				e.Player.SendErrorMessage("Invalid time '{0}'!", match.Groups[2].Value);
+				return;
+			}
+
+			if (repeat)
+				e.Player.SendSuccessMessage("Queued command '{0}{1}' indefinitely. Use /cancel to cancel!", TShock.Config.CommandSpecifier, match.Groups[3].Value);
+			else
+				e.Player.SendSuccessMessage("Queued command '{0}{1}'. Use /cancel to cancel!", TShock.Config.CommandSpecifier, match.Groups[3].Value);
+			e.Player.AddResponse("cancel", o =>
+			{
+				e.Player.GetPlayerInfo().Cancel();
+				e.Player.SendSuccessMessage("Cancelled all time commands!");
+			});
+
+			CancellationToken token = e.Player.GetPlayerInfo().CancellationToken;
+			try
+			{
+				await Task.Run(async () =>
+				{
+					do
+					{
+						await Task.Delay(1000 * seconds, token);
+						TShockAPI.Commands.HandleCommand(e.Player, TShock.Config.CommandSpecifier + match.Groups[3].Value);
+					}
+					while (repeat);
+				}, token);
+			}
+			catch (TaskCanceledException)
+			{
 			}
 		}
 

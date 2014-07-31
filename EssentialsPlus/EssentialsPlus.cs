@@ -74,8 +74,12 @@ namespace EssentialsPlus
 
 		private async void OnReload(ReloadEventArgs e)
 		{
+			string path = Path.Combine(TShock.SavePath, "essentials.json");
+			Config = Config.Read(path);
+			if (!File.Exists(path))
+				Config.Write(path);
 			await Homes.ReloadAsync();
-			e.Player.SendSuccessMessage("[EssentialsPlus] Reloaded homes!");
+			e.Player.SendSuccessMessage("[EssentialsPlus] Reloaded config and homes!");
 		}
 		private void OnPlayerCommand(PlayerCommandEventArgs e)
 		{
@@ -98,8 +102,10 @@ namespace EssentialsPlus
 		private void OnInitialize(EventArgs e)
 		{
 			#region Config
-			var path = Path.Combine(TShock.SavePath, "essentials.json");
-			(Config = Config.Read(path)).Write(path);
+			string path = Path.Combine(TShock.SavePath, "essentials.json");
+			Config = Config.Read(path);
+			if (!File.Exists(path))
+				Config.Write(path);
 			#endregion
 			#region Commands
 			TShockAPI.Commands.ChatCommands.Add(new Command("essentials.find", Commands.Find, "find")
@@ -142,6 +148,11 @@ namespace EssentialsPlus
 			TShockAPI.Commands.ChatCommands.Add(new Command("essentials.sudo", Commands.Sudo, "sudo")
 			{
 				HelpText = "Allows you to execute a command as another user."
+			});
+
+			TShockAPI.Commands.ChatCommands.Add(new Command("essentials.timecmd", Commands.TimeCmd, "timecmd")
+			{
+				HelpText = "Executes a command after a given time interval."
 			});
 
 			TShockAPI.Commands.ChatCommands.Add(new Command("essentials.tp.back", Commands.Back, "back", "b")
