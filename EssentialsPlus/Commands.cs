@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -8,6 +9,7 @@ using System.Threading.Tasks;
 using EssentialsPlus.Db;
 using EssentialsPlus.Extensions;
 using Terraria;
+using Terraria.ID;
 using TShockAPI;
 
 namespace EssentialsPlus
@@ -22,9 +24,11 @@ namespace EssentialsPlus
 			{
 				e.Player.SendErrorMessage("Invalid syntax! Proper syntax: {0}find <-switch> <name...> [page]", TShock.Config.CommandSpecifier);
 				e.Player.SendSuccessMessage("Valid {0}find switches:", TShock.Config.CommandSpecifier);
-				e.Player.SendInfoMessage("-c, -command: Finds a command.");
-				e.Player.SendInfoMessage("-i, -item: Finds an item.");
-				e.Player.SendInfoMessage("-n, -npc: Finds an NPC.");
+				e.Player.SendInfoMessage("-command: Finds a command.");
+				e.Player.SendInfoMessage("-item: Finds an item.");
+				e.Player.SendInfoMessage("-npc: Finds an NPC.");
+				e.Player.SendInfoMessage("-tile: Finds a tile.");
+				e.Player.SendInfoMessage("-wall: Finds a wall.");
 				return;
 			}
 
@@ -38,7 +42,6 @@ namespace EssentialsPlus
 			switch (match.Groups[1].Value.ToLowerInvariant())
 			{
 				#region Command
-				case "c":
 				case "command":
 					var commands = new List<string>();
 
@@ -58,7 +61,6 @@ namespace EssentialsPlus
 					return;
 				#endregion
 				#region Item
-				case "i":
 				case "item":
 					var items = new List<string>();
 
@@ -88,7 +90,6 @@ namespace EssentialsPlus
 					return;
 				#endregion
 				#region NPC
-				case "n":
 				case "npc":
 					var npcs = new List<string>();
 
@@ -117,11 +118,77 @@ namespace EssentialsPlus
 						});
 					return;
 				#endregion
+				#region Tile
+				case "tile":
+					var tiles = new List<string>();
+
+					await Task.Run(() =>
+					{
+						foreach (FieldInfo fi in typeof(TileID).GetFields())
+						{
+							var sb = new StringBuilder();
+							for (int i = 0; i < fi.Name.Length; i++)
+							{
+								if (Char.IsUpper(fi.Name[i]) && i > 0)
+									sb.Append(" ").Append(fi.Name[i]);
+								else
+									sb.Append(fi.Name[i]);
+							}
+
+							string name = sb.ToString();
+							if (name.ContainsInsensitive(match.Groups[2].Value))
+								tiles.Add(String.Format("{0} (ID: {1})", name, fi.GetValue(null)));
+						}
+					});
+
+					PaginationTools.SendPage(e.Player, page, tiles,
+						new PaginationTools.Settings
+						{
+							HeaderFormat = "Found Tiles ({0}/{1}):",
+							FooterFormat = String.Format("Type /find -tile {0} {{0}} for more", match.Groups[2].Value),
+							NothingToDisplayString = "No tiles were found.",
+						});
+					return;
+				#endregion
+				#region Wall
+				case "wall":
+					var walls = new List<string>();
+
+					await Task.Run(() =>
+					{
+						foreach (FieldInfo fi in typeof(WallID).GetFields())
+						{
+							var sb = new StringBuilder();
+							for (int i = 0; i < fi.Name.Length; i++)
+							{
+								if (Char.IsUpper(fi.Name[i]) && i > 0)
+									sb.Append(" ").Append(fi.Name[i]);
+								else
+									sb.Append(fi.Name[i]);
+							}
+
+							string name = sb.ToString();
+							if (name.ContainsInsensitive(match.Groups[2].Value))
+								walls.Add(String.Format("{0} (ID: {1})", name, fi.GetValue(null)));
+						}
+					});
+
+					PaginationTools.SendPage(e.Player, page, walls,
+						new PaginationTools.Settings
+						{
+							HeaderFormat = "Found Walls ({0}/{1}):",
+							FooterFormat = String.Format("Type /find -wall {0} {{0}} for more", match.Groups[2].Value),
+							NothingToDisplayString = "No walls were found.",
+						});
+					return;
+				#endregion
 				default:
 					e.Player.SendSuccessMessage("Valid {0}find switches:", TShock.Config.CommandSpecifier);
-					e.Player.SendInfoMessage("-c, -command: Finds a command.");
-					e.Player.SendInfoMessage("-i, -item: Finds an item.");
-					e.Player.SendInfoMessage("-n, -npc: Finds an NPC.");
+					e.Player.SendInfoMessage("-command: Finds a command.");
+					e.Player.SendInfoMessage("-item: Finds an item.");
+					e.Player.SendInfoMessage("-npc: Finds an NPC.");
+					e.Player.SendInfoMessage("-tile: Finds a tile.");
+					e.Player.SendInfoMessage("-wall: Finds a wall.");
 					return;
 			}
 		}
