@@ -193,6 +193,32 @@ namespace EssentialsPlus
 			}
 		}
 
+		private static System.Timers.Timer FreezeTimer = new System.Timers.Timer(1000);
+		public static void FreezeTime(CommandArgs e)
+		{
+			if (FreezeTimer.Enabled)
+			{
+				FreezeTimer.Stop();
+				TSPlayer.All.SendInfoMessage("{0} unfroze the time.", e.Player.Name);
+			}
+			else
+			{
+				bool dayTime = Main.dayTime;
+				double time = Main.time;
+
+				FreezeTimer.Dispose();
+				FreezeTimer = new System.Timers.Timer(1000);
+				FreezeTimer.Elapsed += (o, ee) =>
+				{
+					Main.dayTime = dayTime;
+					Main.time = time;
+					TSPlayer.All.SendData(PacketTypes.TimeSet);
+				};
+				FreezeTimer.Start();
+				TSPlayer.All.SendInfoMessage("{0} froze the time.", e.Player.Name);
+			}
+		}
+
 		public static async void DeleteHome(CommandArgs e)
 		{
 			if (e.Parameters.Count > 1)

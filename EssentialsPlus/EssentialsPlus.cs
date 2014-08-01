@@ -113,6 +113,11 @@ namespace EssentialsPlus
 				HelpText = "Finds an item and/or NPC with the specified name."
 			});
 
+			TShockAPI.Commands.ChatCommands.Add(new Command("essentials.freezetime", Commands.FreezeTime, "freezetime")
+			{
+				HelpText = "Toggles freezing the time."
+			});
+
 			TShockAPI.Commands.ChatCommands.Add(new Command("essentials.home.delete", Commands.DeleteHome, "delhome")
 			{
 				AllowServer = false,
