@@ -13,26 +13,32 @@ namespace EssentialsPlus
 	public class PlayerInfo
 	{
 		private List<Vector2> backHistory = new List<Vector2>();
-		private CancellationTokenSource cancel = new CancellationTokenSource();
+		private CancellationTokenSource mute = new CancellationTokenSource();
+		private CancellationTokenSource timeCmd = new CancellationTokenSource();
 
 		public int BackHistoryCount
 		{
 			get { return backHistory.Count; }
 		}
-		public CancellationToken CancellationToken
+		public CancellationToken MuteToken
 		{
-			get { return cancel.Token; }
+			get { return mute.Token; }
+		}
+		public CancellationToken TimeCmdToken
+		{
+			get { return timeCmd.Token; }
 		}
 		public string LastCommand { get; set; }
 
 		~PlayerInfo()
 		{
-			cancel.Cancel();
+			mute.Cancel();
+			timeCmd.Cancel();
 		}
 
-		public void Cancel()
+		public void CancelTimeCmd()
 		{
-			cancel.Cancel();
+			timeCmd.Cancel();
 		}
 		public Vector2 PopBackHistory(int steps)
 		{

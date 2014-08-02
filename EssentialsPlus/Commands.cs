@@ -393,13 +393,10 @@ namespace EssentialsPlus
 								players[0].mute = true;
 								try
 								{
-									CancellationToken token = players[0].GetPlayerInfo().CancellationToken;
-									await Task.Run(async () =>
-									{
-										await Task.Delay(TimeSpan.FromSeconds(seconds), token);
-										players[0].mute = false;
-										players[0].SendInfoMessage("You have been unmuted.");
-									}, token);
+									CancellationToken token = players[0].GetPlayerInfo().MuteToken;
+									await Task.Delay(TimeSpan.FromSeconds(seconds), token);
+									players[0].mute = false;
+									players[0].SendInfoMessage("You have been unmuted.");
 								}
 								catch (TaskCanceledException)
 								{
@@ -610,11 +607,11 @@ namespace EssentialsPlus
 				e.Player.SendSuccessMessage("Queued command '{0}{1}'. Use /cancel to cancel!", TShock.Config.CommandSpecifier, match.Groups[3].Value);
 			e.Player.AddResponse("cancel", o =>
 			{
-				e.Player.GetPlayerInfo().Cancel();
+				e.Player.GetPlayerInfo().CancelTimeCmd();
 				e.Player.SendSuccessMessage("Cancelled all time commands!");
 			});
 
-			CancellationToken token = e.Player.GetPlayerInfo().CancellationToken;
+			CancellationToken token = e.Player.GetPlayerInfo().TimeCmdToken;
 			try
 			{
 				await Task.Run(async () =>

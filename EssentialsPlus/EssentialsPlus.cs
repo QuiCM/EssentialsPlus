@@ -232,13 +232,10 @@ namespace EssentialsPlus
 				player.mute = true;
 				try
 				{
-					CancellationToken token = player.GetPlayerInfo().CancellationToken;
-					await Task.Run(async () =>
-					{
-						await Task.Delay(muteExpiration - DateTime.UtcNow, token);
-						player.mute = false;
-						player.SendInfoMessage("You have been unmuted.");
-					}, token);
+					CancellationToken token = player.GetPlayerInfo().MuteToken;
+					await Task.Delay(muteExpiration - DateTime.UtcNow, token);
+					player.mute = false;
+					player.SendInfoMessage("You have been unmuted.");
 				}
 				catch (TaskCanceledException)
 				{
