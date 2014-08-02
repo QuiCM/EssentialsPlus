@@ -496,6 +496,98 @@ namespace EssentialsPlus
 				e.Player.SendErrorMessage("Invalid syntax! Proper syntax: {0}ruler [1/2]", TShock.Config.CommandSpecifier);
 		}
 
+		public static void SendAs(CommandArgs e)
+		{
+			if (e.Parameters.Count < 2)
+			{
+				e.Player.SendErrorMessage("Invalid syntax! Proper syntax: {0}sendas <player name> <text>", TShock.Config.CommandSpecifier);
+				return;
+			}
+
+			var listPlayer = TShock.Utils.FindPlayer(e.Parameters[0]);
+			if (listPlayer.Count < 1)
+			{
+				e.Player.SendErrorMessage("Invalid player!");
+			}
+			else if (listPlayer.Count > 1)
+			{
+				TShock.Utils.SendMultipleMatchError(e.Player, listPlayer);
+			}
+			else
+			{
+				TSPlayer player = listPlayer.FirstOrDefault();
+				if (player == null)
+					return;
+
+				e.Parameters.RemoveAt(0);
+				string msg = String.Format(
+					TShock.Config.ChatFormat,
+					player.Group.Name,
+					player.Group.Prefix,
+					player.Name,
+					player.Group.Suffix,
+					String.Join(" ", e.Parameters));
+
+				TSPlayer.All.SendMessage(msg, player.Group.R, player.Group.G, player.Group.B);
+			}
+		}
+		public static void SendColor(CommandArgs e)
+		{
+			if (e.Parameters.Count < 2)
+			{
+				e.Player.SendErrorMessage("Invalid syntax! Proper syntax: {0}sendcolor <color name/rrr,ggg,bbb> <text>", TShock.Config.CommandSpecifier);
+				return;
+			}
+
+			Color? color;
+			string colorName = e.Parameters[0];
+			if (Char.IsNumber(colorName, 0))
+			{
+				var bytes = colorName.Split(',');
+				if (bytes.Length != 3)
+				{
+					color = null;
+				}
+				else
+				{
+					int[] rgb = new int[3];
+					for (int i = 0; i < bytes.Length; i++)
+					{
+						if (!Int32.TryParse(bytes[i], out rgb[i]))
+						{
+							rgb[i] = 0;
+						}
+					}
+					color = new Color(rgb[0], rgb[1], rgb[2]);
+				}
+			}
+			else
+			{
+				color = colorName.ColorFromName();
+			}
+
+			if (color == null)
+			{
+				e.Player.SendErrorMessage("Invalid color!");
+			}
+			else
+			{
+				e.Parameters.RemoveAt(0);
+				e.Player.SendMessage(String.Join(" ", e.Parameters), color.Value);
+			}
+		}
+		public static void SendRaw(CommandArgs e)
+		{
+			if (e.Parameters.Count < 1)
+			{
+				e.Player.SendErrorMessage("Invalid syntax! Proper syntax: {0}sendraw <text>", TShock.Config.CommandSpecifier);
+			}
+			else
+			{
+				TSPlayer.All.SendInfoMessage(String.Join(" ", e.Parameters));
+			}
+		}
+
 		public static async void Sudo(CommandArgs e)
 		{
 			var regex = new Regex(String.Format(@"^\w+(?: -(\w+))* (?:""(.+?)""|([^\s]*?)) (?:{0})?(.+)$", TShock.Config.CommandSpecifier));

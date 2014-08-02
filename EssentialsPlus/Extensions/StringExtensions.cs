@@ -21,5 +21,24 @@ namespace EssentialsPlus.Extensions
 				return false;
 			return str.IndexOf(findText, StringComparison.OrdinalIgnoreCase) >= 0;
 		}
+
+		/// <summary>
+		/// Gets the Color with a name that matches the current string.
+		/// Uses StringComparison.OrdinalIgnoreCase.
+		/// </summary>
+		/// <param name="str"></param>
+		/// <returns>
+		/// The Color which name matches the string, or
+		/// null if no matches were found.
+		/// </returns>
+		public static Color? ColorFromName(this string str)
+		{
+			var property = typeof(Color).GetProperties().FirstOrDefault(c =>
+				String.Equals(c.Name, str, StringComparison.OrdinalIgnoreCase));
+			if (property == null)
+				return null;
+			else
+				return property.GetValue(null) as Color?;
+		}
 	}
 }
