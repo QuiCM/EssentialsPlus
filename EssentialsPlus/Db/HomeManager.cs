@@ -23,7 +23,6 @@ namespace EssentialsPlus.Db
 			this.db = db;
 
 			var sqlCreator = new SqlTableCreator(db, db.GetSqlType() == SqlType.Sqlite ? (IQueryBuilder)new SqliteQueryCreator() : new MysqlQueryCreator());
-
 			sqlCreator.EnsureExists(new SqlTable("Homes",
 				new SqlColumn("ID", MySqlDbType.Int32) { AutoIncrement = true, Primary = true },
 				new SqlColumn("UserID", MySqlDbType.Int32),
@@ -81,7 +80,7 @@ namespace EssentialsPlus.Db
 				return false;
 			}
 		}
-		public async Task<Home> Get(TSPlayer player, string name)
+		public async Task<Home> GetAsync(TSPlayer player, string name)
 		{
 			return await Task.Run(() =>
 			{
@@ -89,7 +88,7 @@ namespace EssentialsPlus.Db
 					return homes.FirstOrDefault(h => h.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase) && h.UserID == player.UserID);
 			});
 		}
-		public async Task<List<Home>> GetAll(TSPlayer player)
+		public async Task<List<Home>> GetAllAsync(TSPlayer player)
 		{
 			return await Task.Run(() =>
 			{

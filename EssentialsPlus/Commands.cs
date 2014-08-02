@@ -11,6 +11,7 @@ using EssentialsPlus.Extensions;
 using Terraria;
 using Terraria.ID;
 using TShockAPI;
+using TShockAPI.DB;
 
 namespace EssentialsPlus
 {
@@ -33,7 +34,7 @@ namespace EssentialsPlus
 			}
 
 			int page = 1;
-			if (!String.IsNullOrEmpty(match.Groups[3].Value) && (!int.TryParse(match.Groups[3].Value, out page) || page <= 0))
+			if (!String.IsNullOrWhiteSpace(match.Groups[3].Value) && (!int.TryParse(match.Groups[3].Value, out page) || page <= 0))
 			{
 				e.Player.SendErrorMessage("Invalid page '{0}'!", match.Groups[3].Value);
 				return;
@@ -228,7 +229,7 @@ namespace EssentialsPlus
 			}
 
 			string homeName = e.Parameters.Count == 1 ? e.Parameters[0] : "home";
-			Home home = await EssentialsPlus.Homes.Get(e.Player, homeName);
+			Home home = await EssentialsPlus.Homes.GetAsync(e.Player, homeName);
 			if (home != null)
 			{
 				if (await EssentialsPlus.Homes.DeleteAsync(e.Player, homeName))
@@ -248,7 +249,7 @@ namespace EssentialsPlus
 			}
 
 			string homeName = e.Parameters.Count == 1 ? e.Parameters[0] : "home";
-			Home home = await EssentialsPlus.Homes.Get(e.Player, homeName);
+			Home home = await EssentialsPlus.Homes.GetAsync(e.Player, homeName);
 			if (home != null)
 			{
 				e.Player.Teleport(home.X, home.Y);
@@ -266,7 +267,7 @@ namespace EssentialsPlus
 			}
 
 			string homeName = e.Parameters.Count == 1 ? e.Parameters[0] : "home";
-			if (EssentialsPlus.Homes.Get(e.Player, homeName) != null)
+			if (EssentialsPlus.Homes.GetAsync(e.Player, homeName) != null)
 			{
 				if (await EssentialsPlus.Homes.UpdateAsync(e.Player, homeName, e.Player.X, e.Player.Y))
 					e.Player.SendSuccessMessage("Updated your home '{0}'.", homeName);
@@ -275,7 +276,7 @@ namespace EssentialsPlus
 				return;
 			}
 
-			if ((await EssentialsPlus.Homes.GetAll(e.Player)).Count + 1 >= e.Player.Group.GetDynamicPermission("essentials.home.set"))
+			if ((await EssentialsPlus.Homes.GetAllAsync(e.Player)).Count + 1 >= e.Player.Group.GetDynamicPermission(Permissions.HomeSet))
 			{
 				e.Player.SendErrorMessage("You have reached your home limit!");
 				return;
@@ -306,9 +307,9 @@ namespace EssentialsPlus
 				}
 			}
 
-			int kickLevel = e.Player.Group.GetDynamicPermission("essentials.kickall");
-			string reason = String.IsNullOrEmpty(match.Groups[2].Value) ? "No reason." : match.Groups[2].Value;
-			await Task.WhenAll(TShock.Players.Where(p => p != null && p.Group.GetDynamicPermission("essentials.kickall") < kickLevel).Select(p => Task.Run(() =>
+			int kickLevel = e.Player.Group.GetDynamicPermission(Permissions.KickAll);
+			string reason = String.IsNullOrWhiteSpace(match.Groups[2].Value) ? "No reason." : match.Groups[2].Value;
+			await Task.WhenAll(TShock.Players.Where(p => p != null && p.Group.GetDynamicPermission(Permissions.KickAll) < kickLevel).Select(p => Task.Run(() =>
 			{
 				if (!noSave && p.IsLoggedIn)
 					p.SaveServerCharacter();
@@ -320,7 +321,7 @@ namespace EssentialsPlus
 		public static async void RepeatLast(CommandArgs e)
 		{
 			string lastCommand = e.Player.GetPlayerInfo().LastCommand;
-			if (String.IsNullOrEmpty(lastCommand))
+			if (String.IsNullOrWhiteSpace(lastCommand))
 			{
 				e.Player.SendErrorMessage("You don't have a last command!");
 				return;
@@ -328,6 +329,139 @@ namespace EssentialsPlus
 
 			e.Player.SendSuccessMessage("Repeated last command '{0}{1}'!", TShock.Config.CommandSpecifier, lastCommand);
 			await Task.Run(() => TShockAPI.Commands.HandleCommand(e.Player, TShock.Config.CommandSpecifier + lastCommand));
+		}
+
+		public static async void Mute(CommandArgs e)
+		{
+			string subCmd = e.Parameters.FirstOrDefault() ?? "help";
+			switch (subCmd.ToLowerInvariant())
+			{
+				#region Add
+				case "add":
+					{
+						var regex = new Regex(@"^\w+ \w+ (?:""(.+?)""|([^\s]+?))(?: (.+))?$");
+						Match match = regex.Match(e.Message);
+						if (!match.Success)
+						{
+							e.Player.SendErrorMessage("Invalid syntax! Proper syntax: /mute add <name> [time]");
+							return;
+						}
+
+						int seconds = Int32.MaxValue / 1000;
+						if (!String.IsNullOrWhiteSpace(match.Groups[3].Value) &&
+							(!TShock.Utils.TryParseTime(match.Groups[3].Value, out seconds) || seconds <= 0 || seconds > Int32.MaxValue / 1000))
+						{
+							e.Player.SendErrorMessage("Invalid time '{0}'!", match.Groups[3].Value);
+							return;
+						}
+
+						string playerName = String.IsNullOrWhiteSpace(match.Groups[2].Value) ? match.Groups[1].Value : match.Groups[2].Value;
+						List<TSPlayer> players = TShock.Utils.FindPlayer(playerName);
+						if (players.Count == 0)
+						{
+							User user = TShock.Users.GetUserByName(playerName);
+							if (user == null)
+								e.Player.SendErrorMessage("Invalid player or account '{0}'!", playerName);
+							else
+							{
+								if (TShock.Utils.GetGroup(user.Group).GetDynamicPermission(Permissions.Mute) >= e.Player.Group.GetDynamicPermission(Permissions.Mute))
+								{
+									e.Player.SendErrorMessage("You can't mute {0}!", user.Name);
+									return;
+								}
+
+								if (await EssentialsPlus.Mutes.AddAsync(user, DateTime.UtcNow.AddSeconds(seconds)))
+									TSPlayer.All.SendInfoMessage("{0} muted {1}.", e.Player.Name, user.Name);
+								else
+									e.Player.SendErrorMessage("Could not mute, check logs for details.");
+							}
+						}
+						else if (players.Count > 1)
+							e.Player.SendErrorMessage("More than one player matched: {0}", String.Join(", ", players.Select(p => p.Name)));
+						else
+						{
+							if (players[0].Group.GetDynamicPermission(Permissions.Mute) >= e.Player.Group.GetDynamicPermission(Permissions.Mute))
+							{
+								e.Player.SendErrorMessage("You can't mute {0}!", players[0].Name);
+								return;
+							}
+
+							if (await EssentialsPlus.Mutes.AddAsync(players[0], DateTime.UtcNow.AddSeconds(seconds)))
+							{
+								TSPlayer.All.SendInfoMessage("{0} muted {1}.", e.Player.Name, players[0].Name);
+
+								players[0].mute = true;
+								try
+								{
+									CancellationToken token = players[0].GetPlayerInfo().CancellationToken;
+									await Task.Run(async () =>
+									{
+										await Task.Delay(TimeSpan.FromSeconds(seconds), token);
+										players[0].mute = false;
+										players[0].SendInfoMessage("You have been unmuted.");
+									}, token);
+								}
+								catch (TaskCanceledException)
+								{
+								}
+							}
+							else
+								e.Player.SendErrorMessage("Could not mute, check logs for details.");
+						}
+					}
+					return;
+				#endregion
+				#region Delete
+				case "del":
+				case "delete":
+					{
+						var regex = new Regex(@"^\w+ \w+ (?:""(.+?)""|([^\s]*?))$");
+						Match match = regex.Match(e.Message);
+						if (!match.Success)
+						{
+							e.Player.SendErrorMessage("Invalid syntax! Proper syntax: /mute del <name>");
+							return;
+						}
+
+						string playerName = String.IsNullOrWhiteSpace(match.Groups[2].Value) ? match.Groups[1].Value : match.Groups[2].Value;
+						List<TSPlayer> players = TShock.Utils.FindPlayer(playerName);
+						if (players.Count == 0)
+						{
+							User user = TShock.Users.GetUserByName(playerName);
+							if (user == null)
+								e.Player.SendErrorMessage("Invalid player or account '{0}'!", playerName);
+							else
+							{
+								if (await EssentialsPlus.Mutes.DeleteAsync(user))
+									TSPlayer.All.SendInfoMessage("{0} unmuted {1}.", e.Player.Name, user.Name);
+								else
+									e.Player.SendErrorMessage("Could not unmute, check logs for details.");
+							}
+						}
+						else if (players.Count > 1)
+							e.Player.SendErrorMessage("More than one player matched: {0}", String.Join(", ", players.Select(p => p.Name)));
+						else
+						{
+							if (await EssentialsPlus.Mutes.DeleteAsync(players[0]))
+							{
+								players[0].mute = false;
+								TSPlayer.All.SendInfoMessage("{0} unmuted {1}.", e.Player.Name, players[0].Name);
+							}
+							else
+								e.Player.SendErrorMessage("Could not unmute, check logs for details.");
+						}
+					}
+					return;
+				#endregion
+				#region Help
+				case "help":
+				default:
+					e.Player.SendSuccessMessage("Mute Sub-Commands:");
+					e.Player.SendInfoMessage("add <name> [time] - Mutes a player or account.");
+					e.Player.SendInfoMessage("del <name> - Unmutes a player or account.");
+					return;
+				#endregion
+			}
 		}
 
 		public static void Ruler(CommandArgs e)
@@ -385,7 +519,7 @@ namespace EssentialsPlus
 				{
 					case "f":
 					case "force":
-						if (!e.Player.Group.HasPermission("essentials.sudo.force"))
+						if (!e.Player.Group.HasPermission(Permissions.SudoForce))
 						{
 							e.Player.SendErrorMessage("You do not have access to the switch '-{0}'!", capture.Value);
 							return;
@@ -399,7 +533,7 @@ namespace EssentialsPlus
 				}
 			}
 
-			string playerName = String.IsNullOrEmpty(match.Groups[3].Value) ? match.Groups[2].Value : match.Groups[3].Value;
+			string playerName = String.IsNullOrWhiteSpace(match.Groups[3].Value) ? match.Groups[2].Value : match.Groups[3].Value;
 			string command = match.Groups[4].Value;
 
 			List<TSPlayer> players = TShock.Utils.FindPlayer(playerName);
@@ -409,14 +543,14 @@ namespace EssentialsPlus
 				e.Player.SendErrorMessage("More than one player matched: {0}", String.Join(", ", players.Select(p => p.Name)));
 			else
 			{
-				if (e.Player.Group.GetDynamicPermission("essentials.sudo") <= players[0].Group.GetDynamicPermission("essentials.sudo"))
+				if (e.Player.Group.GetDynamicPermission(Permissions.Sudo) <= players[0].Group.GetDynamicPermission(Permissions.Sudo))
 				{
 					e.Player.SendErrorMessage("You cannot force {0} to execute {1}{2}!", players[0].Name, TShock.Config.CommandSpecifier, command);
 					return;
 				}
 
 				e.Player.SendSuccessMessage("Forced {0} to execute {1}{2}.", players[0].Name, TShock.Config.CommandSpecifier, command);
-				if (!e.Player.Group.HasPermission("essentials.sudo.invisible"))
+				if (!e.Player.Group.HasPermission(Permissions.SudoInvisible))
 					players[0].SendInfoMessage("{0} forced you to execute {1}{2}.", e.Player.Name, TShock.Config.CommandSpecifier, command);
 
 				var fakePlayer = new TSPlayer(players[0].Index);
@@ -464,7 +598,7 @@ namespace EssentialsPlus
 			}
 
 			int seconds;
-			if (!TShock.Utils.TryParseTime(match.Groups[2].Value, out seconds) || seconds <= 0)
+			if (!TShock.Utils.TryParseTime(match.Groups[2].Value, out seconds) || seconds <= 0 || seconds > Int32.MaxValue / 1000)
 			{
 				e.Player.SendErrorMessage("Invalid time '{0}'!", match.Groups[2].Value);
 				return;
@@ -487,7 +621,7 @@ namespace EssentialsPlus
 				{
 					do
 					{
-						await Task.Delay(1000 * seconds, token);
+						await Task.Delay(TimeSpan.FromSeconds(seconds), token);
 						TShockAPI.Commands.HandleCommand(e.Player, TShock.Config.CommandSpecifier + match.Groups[3].Value);
 					}
 					while (repeat);
@@ -568,7 +702,7 @@ namespace EssentialsPlus
 				e.Player.SendErrorMessage("Could not teleport down!");
 			else
 			{
-				if (e.Player.Group.HasPermission("essentials.tp.back"))
+				if (e.Player.Group.HasPermission(Permissions.TpBack))
 					e.Player.GetPlayerInfo().PushBackHistory(e.TPlayer.position);
 				e.Player.Teleport(16 * x, 16 * y - 10);
 				e.Player.SendSuccessMessage("Teleported down {0} level{1}.", currentLevel, currentLevel == 1 ? "" : "s");
@@ -618,7 +752,7 @@ namespace EssentialsPlus
 				e.Player.SendErrorMessage("Could not teleport left!");
 			else
 			{
-				if (e.Player.Group.HasPermission("essentials.tp.back"))
+				if (e.Player.Group.HasPermission(Permissions.TpBack))
 					e.Player.GetPlayerInfo().PushBackHistory(e.TPlayer.position);
 				e.Player.Teleport(16 * x + 12, 16 * y);
 				e.Player.SendSuccessMessage("Teleported left {0} level{1}.", currentLevel, currentLevel == 1 ? "" : "s");
@@ -668,7 +802,7 @@ namespace EssentialsPlus
 				e.Player.SendErrorMessage("Could not teleport right!");
 			else
 			{
-				if (e.Player.Group.HasPermission("essentials.tp.back"))
+				if (e.Player.Group.HasPermission(Permissions.TpBack))
 					e.Player.GetPlayerInfo().PushBackHistory(e.TPlayer.position);
 				e.Player.Teleport(16 * x, 16 * y);
 				e.Player.SendSuccessMessage("Teleported right {0} level{1}.", currentLevel, currentLevel == 1 ? "" : "s");
@@ -718,7 +852,7 @@ namespace EssentialsPlus
 				e.Player.SendErrorMessage("Could not teleport up!");
 			else
 			{
-				if (e.Player.Group.HasPermission("essentials.tp.back"))
+				if (e.Player.Group.HasPermission(Permissions.TpBack))
 					e.Player.GetPlayerInfo().PushBackHistory(e.TPlayer.position);
 				e.Player.Teleport(16 * x, 16 * y + 6);
 				e.Player.SendSuccessMessage("Teleported up {0} level{1}.", currentLevel, currentLevel == 1 ? "" : "s");

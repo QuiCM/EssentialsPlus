@@ -4,6 +4,7 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using EssentialsPlus.Db;
 using EssentialsPlus.Extensions;
@@ -24,6 +25,7 @@ namespace EssentialsPlus
 		public static Config Config { get; private set; }
 		public static IDbConnection Db { get; private set; }
 		public static HomeManager Homes { get; private set; }
+		public static MuteManager Mutes { get; private set; }
 
 		public override string Author
 		{
@@ -57,7 +59,7 @@ namespace EssentialsPlus
 				ServerApi.Hooks.GameInitialize.Deregister(this, OnInitialize);
 				ServerApi.Hooks.GamePostInitialize.Deregister(this, OnPostInitialize);
 				ServerApi.Hooks.NetGetData.Deregister(this, OnGetData);
-				ServerApi.Hooks.NetSendData.Deregister(this, OnSendData);
+				ServerApi.Hooks.ServerJoin.Deregister(this, OnJoin);
 			}
 			base.Dispose(disposing);
 		}
@@ -69,7 +71,7 @@ namespace EssentialsPlus
 			ServerApi.Hooks.GameInitialize.Register(this, OnInitialize);
 			ServerApi.Hooks.GamePostInitialize.Register(this, OnPostInitialize);
 			ServerApi.Hooks.NetGetData.Register(this, OnGetData);
-			ServerApi.Hooks.NetSendData.Register(this, OnSendData);
+			ServerApi.Hooks.ServerJoin.Register(this, OnJoin);
 		}
 
 		private async void OnReload(ReloadEventArgs e)
@@ -95,7 +97,7 @@ namespace EssentialsPlus
 				e.Player.SendErrorMessage("This command is blocked while in PvP!");
 				e.Handled = true;
 			}
-			else if (e.Player.Group.HasPermission("essentials.lastcommand") && command.CommandDelegate != Commands.RepeatLast)
+			else if (e.Player.Group.HasPermission(Permissions.LastCommand) && command.CommandDelegate != Commands.RepeatLast)
 				e.Player.GetPlayerInfo().LastCommand = e.CommandText;
 		}
 
@@ -108,79 +110,90 @@ namespace EssentialsPlus
 				Config.Write(path);
 			#endregion
 			#region Commands
-			TShockAPI.Commands.ChatCommands.Add(new Command("essentials.find", Commands.Find, "find")
+			Action<Command> Add = c =>
+			{
+				TShockAPI.Commands.ChatCommands.RemoveAll(c2 => c2.Names.Select(s => s.ToLowerInvariant()).Intersect(c.Names.Select(s => s.ToLowerInvariant())).Any());
+				TShockAPI.Commands.ChatCommands.Add(c);
+			};
+
+			Add(new Command(Permissions.Find, Commands.Find, "find")
 			{
 				HelpText = "Finds an item and/or NPC with the specified name."
 			});
 
-			TShockAPI.Commands.ChatCommands.Add(new Command("essentials.freezetime", Commands.FreezeTime, "freezetime")
+			Add(new Command(Permissions.FreezeTime, Commands.FreezeTime, "freezetime")
 			{
 				HelpText = "Toggles freezing the time."
 			});
 
-			TShockAPI.Commands.ChatCommands.Add(new Command("essentials.home.delete", Commands.DeleteHome, "delhome")
+			Add(new Command(Permissions.HomeDelete, Commands.DeleteHome, "delhome")
 			{
 				AllowServer = false,
 				HelpText = "Deletes one of your home points."
 			});
-			TShockAPI.Commands.ChatCommands.Add(new Command("essentials.home.set", Commands.SetHome, "sethome")
+			Add(new Command(Permissions.HomeSet, Commands.SetHome, "sethome")
 			{
 				AllowServer = false,
 				HelpText = "Sets you a home point."
 			});
-			TShockAPI.Commands.ChatCommands.Add(new Command("essentials.home.tp", Commands.MyHome, "myhome")
+			Add(new Command(Permissions.HomeTp, Commands.MyHome, "myhome")
 			{
 				AllowServer = false,
 				HelpText = "Teleports you to one of your home points."
 			});
 
-			TShockAPI.Commands.ChatCommands.Add(new Command("essentials.kickall", Commands.KickAll, "kickall")
+			Add(new Command(Permissions.KickAll, Commands.KickAll, "kickall")
 			{
 				HelpText = "Kicks everyone on the server."
 			});
 
-			TShockAPI.Commands.ChatCommands.Add(new Command("essentials.lastcommand", Commands.RepeatLast, "=")
+			Add(new Command(Permissions.LastCommand, Commands.RepeatLast, "=")
 			{
 				HelpText = "Allows you to repeat your last command."
 			});
 
-			TShockAPI.Commands.ChatCommands.Add(new Command("essentials.ruler", Commands.Ruler, "ruler")
+			Add(new Command(Permissions.Mute, Commands.Mute, "mute")
+			{
+				HelpText = "Manages mutes."
+			});
+
+			Add(new Command(Permissions.Ruler, Commands.Ruler, "ruler")
 			{
 				AllowServer = false,
 				HelpText = "Allows you to measure the distances between two blocks."
 			});
 
-			TShockAPI.Commands.ChatCommands.Add(new Command("essentials.sudo", Commands.Sudo, "sudo")
+			Add(new Command(Permissions.Sudo, Commands.Sudo, "sudo")
 			{
 				HelpText = "Allows you to execute a command as another user."
 			});
 
-			TShockAPI.Commands.ChatCommands.Add(new Command("essentials.timecmd", Commands.TimeCmd, "timecmd")
+			Add(new Command(Permissions.TimeCmd, Commands.TimeCmd, "timecmd")
 			{
 				HelpText = "Executes a command after a given time interval."
 			});
 
-			TShockAPI.Commands.ChatCommands.Add(new Command("essentials.tp.back", Commands.Back, "back", "b")
+			Add(new Command(Permissions.TpBack, Commands.Back, "back", "b")
 			{
 				AllowServer = false,
 				HelpText = "Teleports you back to your previous position after dying or teleporting."
 			});
-			TShockAPI.Commands.ChatCommands.Add(new Command("essentials.tp.down", Commands.Down, "down")
+			Add(new Command(Permissions.TpDown, Commands.Down, "down")
 			{
 				AllowServer = false,
 				HelpText = "Teleports you down through a layer of blocks."
 			});
-			TShockAPI.Commands.ChatCommands.Add(new Command("essentials.tp.left", Commands.Left, "left")
+			Add(new Command(Permissions.TpLeft, Commands.Left, "left")
 			{
 				AllowServer = false,
 				HelpText = "Teleports you left through a layer of blocks."
 			});
-			TShockAPI.Commands.ChatCommands.Add(new Command("essentials.tp.right", Commands.Right, "right")
+			Add(new Command(Permissions.TpRight, Commands.Right, "right")
 			{
 				AllowServer = false,
 				HelpText = "Teleports you right through a layer of blocks."
 			});
-			TShockAPI.Commands.ChatCommands.Add(new Command("essentials.tp.up", Commands.Up, "up")
+			Add(new Command(Permissions.TpUp, Commands.Up, "up")
 			{
 				AllowServer = false,
 				HelpText = "Teleports you up through a layer of blocks."
@@ -206,9 +219,36 @@ namespace EssentialsPlus
 				throw new InvalidOperationException("Invalid storage type!");
 			#endregion
 		}
+		private async void OnJoin(JoinEventArgs e)
+		{
+			if (e.Handled)
+				return;
+
+			TSPlayer player = TShock.Players[e.Who];
+			DateTime muteExpiration = await Mutes.GetExpirationAsync(player);
+
+			if (DateTime.UtcNow < muteExpiration)
+			{
+				player.mute = true;
+				try
+				{
+					CancellationToken token = player.GetPlayerInfo().CancellationToken;
+					await Task.Run(async () =>
+					{
+						await Task.Delay(muteExpiration - DateTime.UtcNow, token);
+						player.mute = false;
+						player.SendInfoMessage("You have been unmuted.");
+					}, token);
+				}
+				catch (TaskCanceledException)
+				{
+				}
+			}
+		}
 		private void OnPostInitialize(EventArgs e)
 		{
 			Homes = new HomeManager(Db);
+			Mutes = new MuteManager(Db);
 		}
 		private void OnGetData(GetDataEventArgs e)
 		{
@@ -223,16 +263,11 @@ namespace EssentialsPlus
 			{
 				#region Packet 45 - PlayerKillMe
 				case PacketTypes.PlayerKillMe:
-					if (tsplayer.Group.HasPermission("essentials.tp.back"))
+					if (tsplayer.Group.HasPermission(Permissions.TpBack))
 						tsplayer.GetPlayerInfo().PushBackHistory(tsplayer.TPlayer.position);
 					return;
 				#endregion
 			}
-		}
-		private void OnSendData(SendDataEventArgs e)
-		{
-			if (e.Handled)
-				return;
 		}
 	}
 }
