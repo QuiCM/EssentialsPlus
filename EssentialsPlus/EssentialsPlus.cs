@@ -163,19 +163,9 @@ namespace EssentialsPlus
 				HelpText = "Allows you to measure the distances between two blocks."
 			});
 
-			Add(new Command(Permissions.SendAs, Commands.SendAs, "sendas")
+			Add(new Command(Permissions.Send, Commands.Send, "send")
 			{
-				HelpText = "Broadcasts a message as if it was sent by another player."
-			});
-
-			Add(new Command(Permissions.SendColor, Commands.SendColor, "sendcolor")
-			{
-				HelpText = "Broadcasts a raw message in a custom color."
-			});
-
-			Add(new Command(Permissions.SendRaw, Commands.SendRaw, "sendraw")
-			{
-				HelpText = "Broadcasts a raw message."
+				HelpText = "Broadcasts a message in a custom color."
 			});
 
 			Add(new Command(Permissions.Sudo, Commands.Sudo, "sudo")

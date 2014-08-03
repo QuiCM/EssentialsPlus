@@ -143,15 +143,17 @@ namespace EssentialsPlus.Db
 							dateTime = DateTime.Parse(result.Get<string>("Expiration"));
 					}
 
-					syncLock.ExitReadLock();
 					return dateTime;
 				});
 			}
 			catch (Exception ex)
 			{
 				Log.Error(ex.ToString());
-				syncLock.ExitReadLock();
 				return DateTime.MinValue;
+			}
+			finally
+			{
+				syncLock.ExitReadLock();
 			}
 		}
 	}

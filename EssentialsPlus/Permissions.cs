@@ -17,9 +17,7 @@ namespace EssentialsPlus
 		public static readonly string LastCommand = "essentials.lastcommand";
 		public static readonly string Mute = "essentials.mute";
 		public static readonly string Ruler = "essentials.ruler";
-		public static readonly string SendAs = "essentials.send.as";
-		public static readonly string SendColor = "essentials.send.color";
-		public static readonly string SendRaw = "essentials.send.raw";
+		public static readonly string Send = "essentials.send";
 		public static readonly string Sudo = "essentials.sudo";
 		public static readonly string SudoForce = "essentials.sudo.force";
 		public static readonly string SudoInvisible = "essentials.sudo.invisible";
