@@ -39,6 +39,7 @@ namespace EssentialsPlus
 		public void CancelTimeCmd()
 		{
 			timeCmd.Cancel();
+			timeCmd = new CancellationTokenSource();
 		}
 		public Vector2 PopBackHistory(int steps)
 		{
