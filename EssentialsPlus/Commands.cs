@@ -498,16 +498,19 @@ namespace EssentialsPlus
 
 		public static void Send(CommandArgs e)
 		{
-			var regex = new Regex(@"^\w+ (\d+),(\d+),(\d+) (.+)$");
+			var regex = new Regex(@"^\w+(?: (\d+),(\d+),(\d+))? (.+)$");
 			Match match = regex.Match(e.Message);
 			if (!match.Success)
 			{
-				e.Player.SendErrorMessage("Invalid syntax! Proper syntax: {0}sendcolor <r,g,b> <text...>", TShock.Config.CommandSpecifier);
+				e.Player.SendErrorMessage("Invalid syntax! Proper syntax: {0}sendcolor [r,g,b] <text...>", TShock.Config.CommandSpecifier);
 				return;
 			}
 
-			byte r, g, b;
-			if (!byte.TryParse(match.Groups[1].Value, out r) || !byte.TryParse(match.Groups[2].Value, out g) || !byte.TryParse(match.Groups[3].Value, out b))
+			byte r = e.Player.Group.R;
+			byte g = e.Player.Group.G;
+			byte b = e.Player.Group.B;
+			if (!String.IsNullOrWhiteSpace(match.Groups[1].Value) && !String.IsNullOrWhiteSpace(match.Groups[2].Value) && !String.IsNullOrWhiteSpace(match.Groups[3].Value) &&
+				(!byte.TryParse(match.Groups[1].Value, out r) || !byte.TryParse(match.Groups[2].Value, out g) || !byte.TryParse(match.Groups[3].Value, out b)))
 			{
 				e.Player.SendErrorMessage("Invalid color!");
 				return;
