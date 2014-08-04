@@ -34,11 +34,12 @@ namespace EssentialsPlus.Db
 
 		public async Task<bool> AddAsync(TSPlayer player, DateTime expiration)
 		{
-			try
+			return await Task.Run(() =>
 			{
-				return await Task.Run(() =>
+				syncLock.EnterWriteLock();
+
+				try
 				{
-					syncLock.EnterWriteLock();
 					return db.Query("INSERT INTO Mutes VALUES (@0, @1, @2, @3, @4, @5)",
 						null,
 						player.Name,
@@ -46,25 +47,26 @@ namespace EssentialsPlus.Db
 						player.IP,
 						DateTime.UtcNow.ToString("s"),
 						expiration.ToString("s")) > 0;
-				});
-			}
-			catch (Exception ex)
-			{
-				Log.Error(ex.ToString());
-				return false;
-			}
-			finally
-			{
-				syncLock.ExitWriteLock();
-			}
+				}
+				catch (Exception ex)
+				{
+					Log.Error(ex.ToString());
+					return false;
+				}
+				finally
+				{
+					syncLock.ExitWriteLock();
+				}
+			});
 		}
 		public async Task<bool> AddAsync(User user, DateTime expiration)
 		{
-			try
+			return await Task.Run(() =>
 			{
-				return await Task.Run(() =>
+				syncLock.EnterWriteLock();
+
+				try
 				{
-					syncLock.EnterWriteLock();
 					return db.Query("INSERT INTO Mutes VALUES (@0, @1, @2, @3, @4, @5)",
 						null,
 						user.Name,
@@ -72,89 +74,90 @@ namespace EssentialsPlus.Db
 						JsonConvert.DeserializeObject<List<string>>(user.KnownIps)[0],
 						DateTime.UtcNow.ToString("s"),
 						expiration.ToString("s")) > 0;
-				});
-			}
-			catch (Exception ex)
-			{
-				Log.Error(ex.ToString());
-				return false;
-			}
-			finally
-			{
-				syncLock.ExitWriteLock();
-			}
+				}
+				catch (Exception ex)
+				{
+					Log.Error(ex.ToString());
+					return false;
+				}
+				finally
+				{
+					syncLock.ExitWriteLock();
+				}
+			});
 		}
 		public async Task<bool> DeleteAsync(TSPlayer player)
 		{
-			try
+			return await Task.Run(() =>
 			{
-				return await Task.Run(() =>
+				syncLock.EnterWriteLock();
+
+				try
 				{
-					syncLock.EnterWriteLock();
 					return db.Query("DELETE FROM Mutes WHERE ID IN (SELECT ID FROM Mutes WHERE UUID = @0 OR IP = @1 ORDER BY ID DESC LIMIT 1)",
 						player.UUID,
 						player.IP) > 0;
-				});
-			}
-			catch (Exception ex)
-			{
-				Log.Error(ex.ToString());
-				return false;
-			}
-			finally
-			{
-				syncLock.ExitWriteLock();
-			}
+				}
+				catch (Exception ex)
+				{
+					Log.Error(ex.ToString());
+					return false;
+				}
+				finally
+				{
+					syncLock.ExitWriteLock();
+				}
+			});
 		}
 		public async Task<bool> DeleteAsync(User user)
 		{
-			try
+			return await Task.Run(() =>
 			{
-				return await Task.Run(() =>
+				syncLock.EnterWriteLock();
+
+				try
 				{
-					syncLock.EnterWriteLock();
 					return db.Query("DELETE FROM Mutes WHERE ID IN (SELECT ID FROM Mutes WHERE UUID = @0 OR IP = @1 ORDER BY ID DESC LIMIT 1)",
 						user.UUID,
 						JsonConvert.DeserializeObject<List<string>>(user.KnownIps)[0]) > 0;
-				});
-			}
-			catch (Exception ex)
-			{
-				Log.Error(ex.ToString());
-				return false;
-			}
-			finally
-			{
-				syncLock.ExitWriteLock();
-			}
+				}
+				catch (Exception ex)
+				{
+					Log.Error(ex.ToString());
+					return false;
+				}
+				finally
+				{
+					syncLock.ExitWriteLock();
+				}
+			});
 		}
 		public async Task<DateTime> GetExpirationAsync(TSPlayer player)
 		{
-			try
+			return await Task.Run(() =>
 			{
-				return await Task.Run(() =>
-				{
-					syncLock.EnterReadLock();
+				syncLock.EnterReadLock();
 
+				try
+				{
 					DateTime dateTime = DateTime.MinValue;
 					using (QueryResult result = db.QueryReader("SELECT Expiration FROM Mutes WHERE UUID = @0 OR IP = @1 ORDER BY ID DESC", player.UUID, player.IP))
 					{
 						if (result.Read())
 							dateTime = DateTime.Parse(result.Get<string>("Expiration"));
 					}
-
 					return dateTime;
-				});
-			}
-			catch (Exception ex)
-			{
-				Log.Error(ex.ToString());
-				return DateTime.MinValue;
-			}
-			finally
-			{
-				syncLock.ExitReadLock();
-			}
+				}
+				catch (Exception ex)
+				{
+					Log.Error(ex.ToString());
+					return DateTime.MinValue;
+				}
+				finally
+				{
+					syncLock.ExitReadLock();
+				}
+			});
 		}
 	}
 }

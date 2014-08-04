@@ -40,45 +40,45 @@ namespace EssentialsPlus.Db
 
 		public async Task<bool> AddAsync(TSPlayer player, string name, float x, float y)
 		{
-			try
+			return await Task.Run(() =>
 			{
-				return await Task.Run(() =>
+				try
 				{
 					lock (syncLock)
 					{
 						homes.Add(new Home(player.UserID, name, x, y));
 						return db.Query("INSERT INTO Homes (UserID, Name, X, Y, WorldID) VALUES (@0, @1, @2, @3, @4)", player.UserID, name, x, y, Main.worldID) > 0;
 					}
-				});
-			}
-			catch (Exception ex)
-			{
-				Log.Error(ex.ToString());
-				return false;
-			}
+				}
+				catch (Exception ex)
+				{
+					Log.Error(ex.ToString());
+					return false;
+				}
+			});
 		}
 		public async Task<bool> DeleteAsync(TSPlayer player, string name)
 		{
-			try
-			{
-				string query = db.GetSqlType() == SqlType.Mysql ?
-					"DELETE FROM Homes WHERE UserID = @0 AND Name = @1 AND WorldID = @2" :
-					"DELETE FROM Homes WHERE UserID = @0 AND Name = @1 AND WorldID = @2 COLLATE NOCASE";
+			string query = db.GetSqlType() == SqlType.Mysql ?
+				"DELETE FROM Homes WHERE UserID = @0 AND Name = @1 AND WorldID = @2" :
+				"DELETE FROM Homes WHERE UserID = @0 AND Name = @1 AND WorldID = @2 COLLATE NOCASE";
 
-				return await Task.Run(() =>
+			return await Task.Run(() =>
+			{
+				try
 				{
 					lock (syncLock)
 					{
 						homes.RemoveAll(h => h.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase) && h.UserID == player.UserID);
 						return db.Query(query, player.UserID, name, Main.worldID) > 0;
 					}
-				});
-			}
-			catch (Exception ex)
-			{
-				Log.Error(ex.ToString());
-				return false;
-			}
+				}
+				catch (Exception ex)
+				{
+					Log.Error(ex.ToString());
+					return false;
+				}
+			});
 		}
 		public async Task<Home> GetAsync(TSPlayer player, string name)
 		{
@@ -98,9 +98,9 @@ namespace EssentialsPlus.Db
 		}
 		public async Task<bool> ReloadAsync()
 		{
-			try
+			return await Task.Run(() =>
 			{
-				return await Task.Run(() =>
+				try
 				{
 					lock (syncLock)
 					{
@@ -112,23 +112,23 @@ namespace EssentialsPlus.Db
 						}
 						return true;
 					}
-				});
-			}
-			catch (Exception ex)
-			{
-				Log.Error(ex.ToString());
-				return false;
-			}
+				}
+				catch (Exception ex)
+				{
+					Log.Error(ex.ToString());
+					return false;
+				}
+			});
 		}
 		public async Task<bool> UpdateAsync(TSPlayer player, string name, float x, float y)
 		{
-			try
-			{
-				string query = db.GetSqlType() == SqlType.Mysql ?
-					"UPDATE Homes SET X = @0, Y = @1 WHERE UserID = @2 AND Name = @3 AND WorldID = @4" :
-					"UPDATE Homes SET X = @0, Y = @1 WHERE UserID = @2 AND Name = @3 AND WorldID = @4 COLLATE NOCASE";
+			string query = db.GetSqlType() == SqlType.Mysql ?
+				"UPDATE Homes SET X = @0, Y = @1 WHERE UserID = @2 AND Name = @3 AND WorldID = @4" :
+				"UPDATE Homes SET X = @0, Y = @1 WHERE UserID = @2 AND Name = @3 AND WorldID = @4 COLLATE NOCASE";
 
-				return await Task.Run(() =>
+			return await Task.Run(() =>
+			{
+				try
 				{
 					lock (syncLock)
 					{
@@ -136,13 +136,13 @@ namespace EssentialsPlus.Db
 						homes.Add(new Home(player.UserID, name, x, y));
 						return db.Query(query, x, y, player.UserID, name, Main.worldID) > 0;
 					}
-				});
-			}
-			catch (Exception ex)
-			{
-				Log.Error(ex.ToString());
-				return false;
-			}
+				}
+				catch (Exception ex)
+				{
+					Log.Error(ex.ToString());
+					return false;
+				}
+			});
 		}
 	}
 }

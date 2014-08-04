@@ -157,6 +157,12 @@ namespace EssentialsPlus
 				HelpText = "Manages mutes."
 			});
 
+			Add(new Command(Permissions.PvP, Commands.PvP, "pvp")
+			{
+				AllowServer = false,
+				HelpText = "Toggles your PvP status."
+			});
+
 			Add(new Command(Permissions.Ruler, Commands.Ruler, "ruler")
 			{
 				AllowServer = false,

@@ -33,12 +33,15 @@ namespace EssentialsPlus
 		~PlayerInfo()
 		{
 			mute.Cancel();
+			mute.Dispose();
 			timeCmd.Cancel();
+			timeCmd.Dispose();
 		}
 
 		public void CancelTimeCmd()
 		{
 			timeCmd.Cancel();
+			timeCmd.Dispose();
 			timeCmd = new CancellationTokenSource();
 		}
 		public Vector2 PopBackHistory(int steps)
