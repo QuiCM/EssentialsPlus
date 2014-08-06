@@ -91,12 +91,13 @@ namespace EssentialsPlus.Db
 			return await Task.Run(() =>
 			{
 				syncLock.EnterWriteLock();
+				string query = db.GetSqlType() == SqlType.Mysql ?
+					"DELETE FROM Mutes WHERE UUID = @0 OR IP = @1 ORDER BY ID DESC LIMIT 1" :
+					"DELETE FROM Mutes WHERE ID IN (SELECT ID FROM Mutes WHERE UUID = @0 OR IP = @1 ORDER BY ID DESC LIMIT 1)";
 
 				try
 				{
-					return db.Query("DELETE FROM Mutes WHERE ID IN (SELECT ID FROM Mutes WHERE UUID = @0 OR IP = @1 ORDER BY ID DESC LIMIT 1)",
-						player.UUID,
-						player.IP) > 0;
+					return db.Query(query, player.UUID, player.IP) > 0;
 				}
 				catch (Exception ex)
 				{
@@ -114,12 +115,13 @@ namespace EssentialsPlus.Db
 			return await Task.Run(() =>
 			{
 				syncLock.EnterWriteLock();
+				string query = db.GetSqlType() == SqlType.Mysql ?
+					"DELETE FROM Mutes WHERE UUID = @0 OR IP = @1 ORDER BY ID DESC LIMIT 1" :
+					"DELETE FROM Mutes WHERE ID IN (SELECT ID FROM Mutes WHERE UUID = @0 OR IP = @1 ORDER BY ID DESC LIMIT 1)";
 
 				try
 				{
-					return db.Query("DELETE FROM Mutes WHERE ID IN (SELECT ID FROM Mutes WHERE UUID = @0 OR IP = @1 ORDER BY ID DESC LIMIT 1)",
-						user.UUID,
-						JsonConvert.DeserializeObject<List<string>>(user.KnownIps)[0]) > 0;
+					return db.Query(query, user.UUID, JsonConvert.DeserializeObject<List<string>>(user.KnownIps)[0]) > 0;
 				}
 				catch (Exception ex)
 				{
