@@ -267,7 +267,7 @@ namespace EssentialsPlus
 			}
 
 			string homeName = e.Parameters.Count == 1 ? e.Parameters[0] : "home";
-			if (EssentialsPlus.Homes.GetAsync(e.Player, homeName) != null)
+			if (await EssentialsPlus.Homes.GetAsync(e.Player, homeName) != null)
 			{
 				if (await EssentialsPlus.Homes.UpdateAsync(e.Player, homeName, e.Player.X, e.Player.Y))
 					e.Player.SendSuccessMessage("Updated your home '{0}'.", homeName);
