@@ -276,7 +276,7 @@ namespace EssentialsPlus
 				return;
 			}
 
-			if ((await EssentialsPlus.Homes.GetAllAsync(e.Player)).Count + 1 >= e.Player.Group.GetDynamicPermission(Permissions.HomeSet))
+			if ((await EssentialsPlus.Homes.GetAllAsync(e.Player)).Count >= e.Player.Group.GetDynamicPermission(Permissions.HomeSet))
 			{
 				e.Player.SendErrorMessage("You have reached your home limit!");
 				return;
