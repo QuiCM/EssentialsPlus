@@ -48,7 +48,7 @@ namespace EssentialsPlus
 
 					await Task.Run(() =>
 					{
-						foreach (Command command in TShockAPI.Commands.ChatCommands.Where(c => c.Names.Any(s => s.ContainsInsensitive(match.Groups[2].Value))))
+						foreach (Command command in TShockAPI.Commands.ChatCommands.FindAll(c => c.Names.Any(s => s.ContainsInsensitive(match.Groups[2].Value))))
 							commands.Add(String.Format("{0} (Permission: {1})", command.Name, command.Permissions.FirstOrDefault()));
 					});
 
