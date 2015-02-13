@@ -85,7 +85,7 @@ namespace EssentialsPlus.Db
 			return await Task.Run(() =>
 			{
 				lock (syncLock)
-					return homes.FirstOrDefault(h => h.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase) && h.UserID == player.UserID);
+					return homes.Find(h => h.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase) && h.UserID == player.UserID);
 			});
 		}
 		public async Task<List<Home>> GetAllAsync(TSPlayer player)
@@ -93,7 +93,7 @@ namespace EssentialsPlus.Db
 			return await Task.Run(() =>
 			{
 				lock (syncLock)
-					return homes.Where(h => h.UserID == player.UserID).ToList();
+					return homes.FindAll(h => h.UserID == player.UserID);
 			});
 		}
 		public async Task<bool> ReloadAsync()
