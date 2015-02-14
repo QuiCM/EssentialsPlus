@@ -248,15 +248,23 @@ namespace EssentialsPlus
 				return;
 			}
 
-			string homeName = e.Parameters.Count == 1 ? e.Parameters[0] : "home";
-			Home home = await EssentialsPlus.Homes.GetAsync(e.Player, homeName);
-			if (home != null)
+			if (Regex.Match(e.Message, @"^\w+ -l(?:ist)?$").Success)
 			{
-				e.Player.Teleport(home.X, home.Y);
-				e.Player.SendSuccessMessage("Teleported you to your home '{0}'.", homeName);
+				List<Home> homes = await EssentialsPlus.Homes.GetAllAsync(e.Player);
+				e.Player.SendInfoMessage(homes.Count == 0 ? "You have no homes set." : "List of homes: {0}", string.Join(", ", homes.Select(h => h.Name)));
 			}
 			else
-				e.Player.SendErrorMessage("Invalid home '{0}'!", homeName);
+			{
+				string homeName = e.Parameters.Count == 1 ? e.Parameters[0] : "home";
+				Home home = await EssentialsPlus.Homes.GetAsync(e.Player, homeName);
+				if (home != null)
+				{
+					e.Player.Teleport(home.X, home.Y);
+					e.Player.SendSuccessMessage("Teleported you to your home '{0}'.", homeName);
+				}
+				else
+					e.Player.SendErrorMessage("Invalid home '{0}'!", homeName);
+			}
 		}
 		public static async void SetHome(CommandArgs e)
 		{
