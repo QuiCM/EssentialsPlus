@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using MySql.Data.MySqlClient;
 using Terraria;
@@ -23,7 +20,7 @@ namespace EssentialsPlus.Db
 			this.db = db;
 
 			var sqlCreator = new SqlTableCreator(db, db.GetSqlType() == SqlType.Sqlite ? (IQueryBuilder)new SqliteQueryCreator() : new MysqlQueryCreator());
-			sqlCreator.EnsureExists(new SqlTable("Homes",
+			sqlCreator.EnsureTableStructure(new SqlTable("Homes",
 				new SqlColumn("ID", MySqlDbType.Int32) { AutoIncrement = true, Primary = true },
 				new SqlColumn("UserID", MySqlDbType.Int32),
 				new SqlColumn("Name", MySqlDbType.Text),
@@ -52,7 +49,7 @@ namespace EssentialsPlus.Db
 				}
 				catch (Exception ex)
 				{
-					Log.Error(ex.ToString());
+					TShock.Log.Error(ex.ToString());
 					return false;
 				}
 			});
@@ -75,7 +72,7 @@ namespace EssentialsPlus.Db
 				}
 				catch (Exception ex)
 				{
-					Log.Error(ex.ToString());
+					TShock.Log.Error(ex.ToString());
 					return false;
 				}
 			});
@@ -115,7 +112,7 @@ namespace EssentialsPlus.Db
 				}
 				catch (Exception ex)
 				{
-					Log.Error(ex.ToString());
+					TShock.Log.Error(ex.ToString());
 					return false;
 				}
 			});
@@ -139,7 +136,7 @@ namespace EssentialsPlus.Db
 				}
 				catch (Exception ex)
 				{
-					Log.Error(ex.ToString());
+					TShock.Log.Error(ex.ToString());
 					return false;
 				}
 			});

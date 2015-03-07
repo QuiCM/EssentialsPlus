@@ -1,16 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using TShockAPI;
+using Group = TShockAPI.Group;
 
 namespace EssentialsPlus.Extensions
 {
 	public static class GroupExtensions
 	{
-		public static int GetDynamicPermission(this TShockAPI.Group group, string root)
+		public static int GetDynamicPermission(this Group group, string root)
 		{
 			if (group.HasPermission(root + ".*"))
 				return Int32.MaxValue;

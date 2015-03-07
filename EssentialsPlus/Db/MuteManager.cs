@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using TShockAPI;
 using TShockAPI.DB;
-using System.Threading;
 
 namespace EssentialsPlus.Db
 {
@@ -22,7 +20,7 @@ namespace EssentialsPlus.Db
 			this.db = db;
 
 			var sqlCreator = new SqlTableCreator(db, db.GetSqlType() == SqlType.Sqlite ? (IQueryBuilder)new SqliteQueryCreator() : new MysqlQueryCreator());
-			sqlCreator.EnsureExists(new SqlTable("Mutes",
+			sqlCreator.EnsureTableStructure(new SqlTable("Mutes",
 				new SqlColumn("ID", MySqlDbType.Int32) { AutoIncrement = true, Primary = true },
 				new SqlColumn("Name", MySqlDbType.Text),
 				new SqlColumn("UUID", MySqlDbType.Text),
@@ -50,7 +48,7 @@ namespace EssentialsPlus.Db
 				}
 				catch (Exception ex)
 				{
-					Log.Error(ex.ToString());
+					TShock.Log.Error(ex.ToString());
 					return false;
 				}
 				finally
@@ -77,7 +75,7 @@ namespace EssentialsPlus.Db
 				}
 				catch (Exception ex)
 				{
-					Log.Error(ex.ToString());
+					TShock.Log.Error(ex.ToString());
 					return false;
 				}
 				finally
@@ -101,7 +99,7 @@ namespace EssentialsPlus.Db
 				}
 				catch (Exception ex)
 				{
-					Log.Error(ex.ToString());
+					TShock.Log.Error(ex.ToString());
 					return false;
 				}
 				finally
@@ -125,7 +123,7 @@ namespace EssentialsPlus.Db
 				}
 				catch (Exception ex)
 				{
-					Log.Error(ex.ToString());
+					TShock.Log.Error(ex.ToString());
 					return false;
 				}
 				finally
@@ -152,7 +150,7 @@ namespace EssentialsPlus.Db
 				}
 				catch (Exception ex)
 				{
-					Log.Error(ex.ToString());
+					TShock.Log.Error(ex.ToString());
 					return DateTime.MinValue;
 				}
 				finally

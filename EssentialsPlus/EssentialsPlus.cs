@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading;
+using System.Reflection;
 using System.Threading.Tasks;
 using EssentialsPlus.Db;
 using EssentialsPlus.Extensions;
@@ -13,13 +11,11 @@ using MySql.Data.MySqlClient;
 using Terraria;
 using TerrariaApi.Server;
 using TShockAPI;
-using TShockAPI.DB;
-using TShockAPI.Extensions;
 using TShockAPI.Hooks;
 
 namespace EssentialsPlus
 {
-	[ApiVersion(1, 16)]
+	[ApiVersion(1, 17)]
 	public class EssentialsPlus : TerrariaPlugin
 	{
 		public static Config Config { get; private set; }
@@ -41,7 +37,7 @@ namespace EssentialsPlus
 		}
 		public override Version Version
 		{
-			get { return System.Reflection.Assembly.GetExecutingAssembly().GetName().Version; }
+			get { return Assembly.GetExecutingAssembly().GetName().Version; }
 		}
 
 		public EssentialsPlus(Main game)
