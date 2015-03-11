@@ -27,14 +27,17 @@ namespace EssentialsPlus
 		{
 			get { return "WhiteX et al."; }
 		}
+
 		public override string Description
 		{
 			get { return "Essentials, but better"; }
 		}
+
 		public override string Name
 		{
 			get { return "EssentialsPlus"; }
 		}
+
 		public override Version Version
 		{
 			get { return Assembly.GetExecutingAssembly().GetName().Version; }
@@ -59,6 +62,7 @@ namespace EssentialsPlus
 			}
 			base.Dispose(disposing);
 		}
+
 		public override void Initialize()
 		{
 			GeneralHooks.ReloadEvent += OnReload;
@@ -75,40 +79,59 @@ namespace EssentialsPlus
 			string path = Path.Combine(TShock.SavePath, "essentials.json");
 			Config = Config.Read(path);
 			if (!File.Exists(path))
+			{
 				Config.Write(path);
+			}
 			await Homes.ReloadAsync();
 			e.Player.SendSuccessMessage("[EssentialsPlus] Reloaded config and homes!");
 		}
+
 		private void OnPlayerCommand(PlayerCommandEventArgs e)
 		{
 			if (e.Handled || e.Player == null)
+			{
 				return;
+			}
 
 			Command command = e.CommandList.FirstOrDefault();
 			if (command == null || (command.Permissions.Any() && !command.Permissions.Any(s => e.Player.Group.HasPermission(s))))
+			{
 				return;
+			}
 
-			if (e.Player.TPlayer.hostile && command.Names.Select(s => s.ToLowerInvariant()).Intersect(Config.DisabledCommandsInPvp.Select(s => s.ToLowerInvariant())).Any())
+			if (e.Player.TPlayer.hostile &&
+			    command.Names.Select(s => s.ToLowerInvariant())
+				    .Intersect(Config.DisabledCommandsInPvp.Select(s => s.ToLowerInvariant()))
+				    .Any())
 			{
 				e.Player.SendErrorMessage("This command is blocked while in PvP!");
 				e.Handled = true;
 			}
 			else if (e.Player.Group.HasPermission(Permissions.LastCommand) && command.CommandDelegate != Commands.RepeatLast)
+			{
 				e.Player.GetPlayerInfo().LastCommand = e.CommandText;
+			}
 		}
 
 		private void OnInitialize(EventArgs e)
 		{
 			#region Config
+
 			string path = Path.Combine(TShock.SavePath, "essentials.json");
 			Config = Config.Read(path);
 			if (!File.Exists(path))
+			{
 				Config.Write(path);
+			}
+
 			#endregion
+
 			#region Commands
+
 			Action<Command> Add = c =>
 			{
-				TShockAPI.Commands.ChatCommands.RemoveAll(c2 => c2.Names.Select(s => s.ToLowerInvariant()).Intersect(c.Names.Select(s => s.ToLowerInvariant())).Any());
+				TShockAPI.Commands.ChatCommands.RemoveAll(
+					c2 => c2.Names.Select(s => s.ToLowerInvariant()).Intersect(c.Names.Select(s => s.ToLowerInvariant())).Any());
 				TShockAPI.Commands.ChatCommands.Add(c);
 			};
 
@@ -205,12 +228,15 @@ namespace EssentialsPlus
 				AllowServer = false,
 				HelpText = "Teleports you up through a layer of blocks."
 			});
+
 			#endregion
+
 			#region Database
+
 			if (TShock.Config.StorageType.Equals("mysql", StringComparison.OrdinalIgnoreCase))
 			{
 				string[] host = Config.MySqlHost.Split(':');
-				Db = new MySqlConnection()
+				Db = new MySqlConnection
 				{
 					ConnectionString = String.Format("Server={0}; Port={1}; Database={2}; Uid={3}; Pwd={4};",
 						host[0],
@@ -221,17 +247,31 @@ namespace EssentialsPlus
 				};
 			}
 			else if (TShock.Config.StorageType.Equals("sqlite", StringComparison.OrdinalIgnoreCase))
-				Db = new SqliteConnection("uri=file://" + Path.Combine(TShock.SavePath, "essentials.sqlite") + ",Version=3");
+			{
+				Db = new SqliteConnection(
+					"uri=file://" + Path.Combine(TShock.SavePath, "essentials.sqlite") + ",Version=3");
+			}
 			else
+			{
 				throw new InvalidOperationException("Invalid storage type!");
+			}
+
 			#endregion
 		}
+
 		private async void OnJoin(JoinEventArgs e)
 		{
 			if (e.Handled)
+			{
 				return;
+			}
 
 			TSPlayer player = TShock.Players[e.Who];
+			if (player == null)
+			{
+				return;
+			}
+
 			DateTime muteExpiration = await Mutes.GetExpirationAsync(player);
 
 			if (DateTime.UtcNow < muteExpiration)
@@ -248,28 +288,38 @@ namespace EssentialsPlus
 				}
 			}
 		}
+
 		private void OnPostInitialize(EventArgs e)
 		{
 			Homes = new HomeManager(Db);
 			Mutes = new MuteManager(Db);
 		}
+
 		private void OnGetData(GetDataEventArgs e)
 		{
 			if (e.Handled)
+			{
 				return;
+			}
 
 			TSPlayer tsplayer = TShock.Players[e.Msg.whoAmI];
 			if (tsplayer == null)
+			{
 				return;
+			}
 
 			switch (e.MsgID)
 			{
-				#region Packet 45 - PlayerKillMe
+					#region Packet 45 - PlayerKillMe
+
 				case PacketTypes.PlayerKillMe:
 					if (tsplayer.Group.HasPermission(Permissions.TpBack))
+					{
 						tsplayer.GetPlayerInfo().PushBackHistory(tsplayer.TPlayer.position);
+					}
 					return;
-				#endregion
+
+					#endregion
 			}
 		}
 	}

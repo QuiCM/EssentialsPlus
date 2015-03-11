@@ -47,7 +47,9 @@ namespace EssentialsPlus
 		{
 			backHistory.Insert(0, vector);
 			if (backHistory.Count > EssentialsPlus.Config.BackPositionHistory)
+			{
 				backHistory.RemoveAt(backHistory.Count - 1);
+			}
 		}
 	}
 }

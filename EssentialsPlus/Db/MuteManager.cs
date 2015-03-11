@@ -19,13 +19,15 @@ namespace EssentialsPlus.Db
 		{
 			this.db = db;
 
-			var sqlCreator = new SqlTableCreator(db, db.GetSqlType() == SqlType.Sqlite ? (IQueryBuilder)new SqliteQueryCreator() : new MysqlQueryCreator());
+			var sqlCreator = new SqlTableCreator(db, db.GetSqlType() == SqlType.Sqlite
+				? (IQueryBuilder)new SqliteQueryCreator() 
+				: new MysqlQueryCreator());
+
 			sqlCreator.EnsureTableStructure(new SqlTable("Mutes",
 				new SqlColumn("ID", MySqlDbType.Int32) { AutoIncrement = true, Primary = true },
 				new SqlColumn("Name", MySqlDbType.Text),
 				new SqlColumn("UUID", MySqlDbType.Text),
 				new SqlColumn("IP", MySqlDbType.Text),
-
 				new SqlColumn("Date", MySqlDbType.Text),
 				new SqlColumn("Expiration", MySqlDbType.Text)));
 		}
@@ -144,7 +146,9 @@ namespace EssentialsPlus.Db
 					using (QueryResult result = db.QueryReader("SELECT Expiration FROM Mutes WHERE UUID = @0 OR IP = @1 ORDER BY ID DESC", player.UUID, player.IP))
 					{
 						if (result.Read())
+						{
 							dateTime = DateTime.Parse(result.Get<string>("Expiration"));
+						}
 					}
 					return dateTime;
 				}

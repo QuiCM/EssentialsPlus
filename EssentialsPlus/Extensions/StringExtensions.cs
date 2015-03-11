@@ -14,7 +14,9 @@ namespace EssentialsPlus.Extensions
 		public static bool ContainsInsensitive(this string str, string findText)
 		{
 			if (String.IsNullOrEmpty(str) || String.IsNullOrEmpty(findText))
+			{
 				return false;
+			}
 			return str.IndexOf(findText, StringComparison.OrdinalIgnoreCase) >= 0;
 		}
 	}
