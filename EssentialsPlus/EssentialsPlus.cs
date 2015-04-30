@@ -128,10 +128,12 @@ namespace EssentialsPlus
 
 			#region Commands
 
+			//Allows overriding of already created commands.
 			Action<Command> Add = c =>
 			{
-				TShockAPI.Commands.ChatCommands.RemoveAll(
-					c2 => c2.Names.Select(s => s.ToLowerInvariant()).Intersect(c.Names.Select(s => s.ToLowerInvariant())).Any());
+				//Finds any commands with names and aliases that match the new command and removes them.
+				TShockAPI.Commands.ChatCommands.RemoveAll(c2 => c2.Names.Exists(s2 => c.Names.Contains(s2)));
+				//Then adds the new command.
 				TShockAPI.Commands.ChatCommands.Add(c);
 			};
 
@@ -171,6 +173,7 @@ namespace EssentialsPlus
 				HelpText = "Allows you to repeat your last command."
 			});
 
+			//This will override TShock's 'mute' command
 			Add(new Command(Permissions.Mute, Commands.Mute, "mute")
 			{
 				HelpText = "Manages mutes."
