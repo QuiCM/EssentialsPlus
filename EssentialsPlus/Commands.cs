@@ -36,7 +36,7 @@ namespace EssentialsPlus
 
 			int page = 1;
 			if (!String.IsNullOrWhiteSpace(match.Groups["page"].Value) &&
-			    (!int.TryParse(match.Groups["page"].Value, out page) || page <= 0))
+				(!int.TryParse(match.Groups["page"].Value, out page) || page <= 0))
 			{
 				e.Player.SendErrorMessage("Invalid page '{0}'!", match.Groups["page"].Value);
 				return;
@@ -44,35 +44,35 @@ namespace EssentialsPlus
 
 			switch (match.Groups["switch"].Value.ToLowerInvariant())
 			{
-					#region Command
+				#region Command
 
 				case "command":
-				{
-					var commands = new List<string>();
-
-					await Task.Run(() =>
 					{
-						foreach (
-							Command command in
-								TShockAPI.Commands.ChatCommands.FindAll(c => c.Names.Any(s => s.ContainsInsensitive(match.Groups[2].Value))))
-						{
-							commands.Add(String.Format("{0} (Permission: {1})", command.Name, command.Permissions.FirstOrDefault()));
-						}
-					});
+						var commands = new List<string>();
 
-					PaginationTools.SendPage(e.Player, page, commands,
-						new PaginationTools.Settings
+						await Task.Run(() =>
 						{
-							HeaderFormat = "Found Commands ({0}/{1}):",
-							FooterFormat = String.Format("Type /find -command {0} {{0}} for more", match.Groups[2].Value),
-							NothingToDisplayString = "No commands were found."
+							foreach (
+								Command command in
+									TShockAPI.Commands.ChatCommands.FindAll(c => c.Names.Any(s => s.ContainsInsensitive(match.Groups[2].Value))))
+							{
+								commands.Add(String.Format("{0} (Permission: {1})", command.Name, command.Permissions.FirstOrDefault()));
+							}
 						});
-					return;
-				}
 
-					#endregion
+						PaginationTools.SendPage(e.Player, page, commands,
+							new PaginationTools.Settings
+							{
+								HeaderFormat = "Found Commands ({0}/{1}):",
+								FooterFormat = String.Format("Type /find -command {0} {{0}} for more", match.Groups[2].Value),
+								NothingToDisplayString = "No commands were found."
+							});
+						return;
+					}
 
-					#region Item
+				#endregion
+
+				#region Item
 
 				case "item":
 					var items = new List<string>();
@@ -106,9 +106,9 @@ namespace EssentialsPlus
 						});
 					return;
 
-					#endregion
+				#endregion
 
-					#region NPC
+				#region NPC
 
 				case "npc":
 					var npcs = new List<string>();
@@ -142,16 +142,16 @@ namespace EssentialsPlus
 						});
 					return;
 
-					#endregion
+				#endregion
 
-					#region Tile
+				#region Tile
 
 				case "tile":
 					var tiles = new List<string>();
 
 					await Task.Run(() =>
 					{
-						foreach (FieldInfo fi in typeof (TileID).GetFields())
+						foreach (FieldInfo fi in typeof(TileID).GetFields())
 						{
 							var sb = new StringBuilder();
 							for (int i = 0; i < fi.Name.Length; i++)
@@ -183,16 +183,16 @@ namespace EssentialsPlus
 						});
 					return;
 
-					#endregion
+				#endregion
 
-					#region Wall
+				#region Wall
 
 				case "wall":
 					var walls = new List<string>();
 
 					await Task.Run(() =>
 					{
-						foreach (FieldInfo fi in typeof (WallID).GetFields())
+						foreach (FieldInfo fi in typeof(WallID).GetFields())
 						{
 							var sb = new StringBuilder();
 							for (int i = 0; i < fi.Name.Length; i++)
@@ -224,7 +224,7 @@ namespace EssentialsPlus
 						});
 					return;
 
-					#endregion
+				#endregion
 
 				default:
 					e.Player.SendSuccessMessage("Valid {0}find switches:", TShock.Config.CommandSpecifier);
@@ -407,139 +407,139 @@ namespace EssentialsPlus
 			string subCmd = e.Parameters.FirstOrDefault() ?? "help";
 			switch (subCmd.ToLowerInvariant())
 			{
-					#region Add
+				#region Add
 
 				case "add":
-				{
-					var regex = new Regex(@"^\w+ \w+ (?:""(.+?)""|([^\s]+?))(?: (.+))?$");
-					Match match = regex.Match(e.Message);
-					if (!match.Success)
 					{
-						e.Player.SendErrorMessage("Invalid syntax! Proper syntax: /mute add <name> [time]");
-						return;
-					}
-
-					int seconds = Int32.MaxValue/1000;
-					if (!String.IsNullOrWhiteSpace(match.Groups[3].Value) &&
-					    (!TShock.Utils.TryParseTime(match.Groups[3].Value, out seconds) || seconds <= 0 ||
-					     seconds > Int32.MaxValue/1000))
-					{
-						e.Player.SendErrorMessage("Invalid time '{0}'!", match.Groups[3].Value);
-						return;
-					}
-
-					string playerName = String.IsNullOrWhiteSpace(match.Groups[2].Value)
-						? match.Groups[1].Value
-						: match.Groups[2].Value;
-					List<TSPlayer> players = TShock.Utils.FindPlayer(playerName);
-					if (players.Count == 0)
-					{
-						User user = TShock.Users.GetUserByName(playerName);
-						if (user == null)
-							e.Player.SendErrorMessage("Invalid player or account '{0}'!", playerName);
-						else
+						var regex = new Regex(@"^\w+ \w+ (?:""(.+?)""|([^\s]+?))(?: (.+))?$");
+						Match match = regex.Match(e.Message);
+						if (!match.Success)
 						{
-							if (TShock.Utils.GetGroup(user.Group).GetDynamicPermission(Permissions.Mute) >=
-							    e.Player.Group.GetDynamicPermission(Permissions.Mute))
-							{
-								e.Player.SendErrorMessage("You can't mute {0}!", user.Name);
-								return;
-							}
-
-							if (await EssentialsPlus.Mutes.AddAsync(user, DateTime.UtcNow.AddSeconds(seconds)))
-							{
-								TSPlayer.All.SendInfoMessage("{0} muted {1}.", e.Player.Name, user.Name);
-							}
-							else
-							{
-								e.Player.SendErrorMessage("Could not mute, check logs for details.");
-							}
-						}
-					}
-					else if (players.Count > 1)
-					{
-						e.Player.SendErrorMessage("More than one player matched: {0}", String.Join(", ", players.Select(p => p.Name)));
-					}
-					else
-					{
-						if (players[0].Group.GetDynamicPermission(Permissions.Mute) >=
-						    e.Player.Group.GetDynamicPermission(Permissions.Mute))
-						{
-							e.Player.SendErrorMessage("You can't mute {0}!", players[0].Name);
+							e.Player.SendErrorMessage("Invalid syntax! Proper syntax: /mute add <name> [time]");
 							return;
 						}
 
-						if (await EssentialsPlus.Mutes.AddAsync(players[0], DateTime.UtcNow.AddSeconds(seconds)))
+						int seconds = Int32.MaxValue / 1000;
+						if (!String.IsNullOrWhiteSpace(match.Groups[3].Value) &&
+							(!TShock.Utils.TryParseTime(match.Groups[3].Value, out seconds) || seconds <= 0 ||
+							 seconds > Int32.MaxValue / 1000))
 						{
-							TSPlayer.All.SendInfoMessage("{0} muted {1}.", e.Player.Name, players[0].Name);
+							e.Player.SendErrorMessage("Invalid time '{0}'!", match.Groups[3].Value);
+							return;
+						}
 
-							players[0].mute = true;
-							try
+						string playerName = String.IsNullOrWhiteSpace(match.Groups[2].Value)
+							? match.Groups[1].Value
+							: match.Groups[2].Value;
+						List<TSPlayer> players = TShock.Utils.FindPlayer(playerName);
+						if (players.Count == 0)
+						{
+							User user = TShock.Users.GetUserByName(playerName);
+							if (user == null)
+								e.Player.SendErrorMessage("Invalid player or account '{0}'!", playerName);
+							else
 							{
-								await Task.Delay(TimeSpan.FromSeconds(seconds), players[0].GetPlayerInfo().MuteToken);
-								players[0].mute = false;
-								players[0].SendInfoMessage("You have been unmuted.");
-							}
-							catch (TaskCanceledException)
-							{
+								if (TShock.Utils.GetGroup(user.Group).GetDynamicPermission(Permissions.Mute) >=
+									e.Player.Group.GetDynamicPermission(Permissions.Mute))
+								{
+									e.Player.SendErrorMessage("You can't mute {0}!", user.Name);
+									return;
+								}
+
+								if (await EssentialsPlus.Mutes.AddAsync(user, DateTime.UtcNow.AddSeconds(seconds)))
+								{
+									TSPlayer.All.SendInfoMessage("{0} muted {1}.", e.Player.Name, user.Name);
+								}
+								else
+								{
+									e.Player.SendErrorMessage("Could not mute, check logs for details.");
+								}
 							}
 						}
+						else if (players.Count > 1)
+						{
+							e.Player.SendErrorMessage("More than one player matched: {0}", String.Join(", ", players.Select(p => p.Name)));
+						}
 						else
-							e.Player.SendErrorMessage("Could not mute, check logs for details.");
+						{
+							if (players[0].Group.GetDynamicPermission(Permissions.Mute) >=
+								e.Player.Group.GetDynamicPermission(Permissions.Mute))
+							{
+								e.Player.SendErrorMessage("You can't mute {0}!", players[0].Name);
+								return;
+							}
+
+							if (await EssentialsPlus.Mutes.AddAsync(players[0], DateTime.UtcNow.AddSeconds(seconds)))
+							{
+								TSPlayer.All.SendInfoMessage("{0} muted {1}.", e.Player.Name, players[0].Name);
+
+								players[0].mute = true;
+								try
+								{
+									await Task.Delay(TimeSpan.FromSeconds(seconds), players[0].GetPlayerInfo().MuteToken);
+									players[0].mute = false;
+									players[0].SendInfoMessage("You have been unmuted.");
+								}
+								catch (TaskCanceledException)
+								{
+								}
+							}
+							else
+								e.Player.SendErrorMessage("Could not mute, check logs for details.");
+						}
 					}
-				}
 					return;
 
-					#endregion
+				#endregion
 
-					#region Delete
+				#region Delete
 
 				case "del":
 				case "delete":
-				{
-					var regex = new Regex(@"^\w+ \w+ (?:""(.+?)""|([^\s]*?))$");
-					Match match = regex.Match(e.Message);
-					if (!match.Success)
 					{
-						e.Player.SendErrorMessage("Invalid syntax! Proper syntax: /mute del <name>");
-						return;
-					}
+						var regex = new Regex(@"^\w+ \w+ (?:""(.+?)""|([^\s]*?))$");
+						Match match = regex.Match(e.Message);
+						if (!match.Success)
+						{
+							e.Player.SendErrorMessage("Invalid syntax! Proper syntax: /mute del <name>");
+							return;
+						}
 
-					string playerName = String.IsNullOrWhiteSpace(match.Groups[2].Value)
-						? match.Groups[1].Value
-						: match.Groups[2].Value;
-					List<TSPlayer> players = TShock.Utils.FindPlayer(playerName);
-					if (players.Count == 0)
-					{
-						User user = TShock.Users.GetUserByName(playerName);
-						if (user == null)
-							e.Player.SendErrorMessage("Invalid player or account '{0}'!", playerName);
+						string playerName = String.IsNullOrWhiteSpace(match.Groups[2].Value)
+							? match.Groups[1].Value
+							: match.Groups[2].Value;
+						List<TSPlayer> players = TShock.Utils.FindPlayer(playerName);
+						if (players.Count == 0)
+						{
+							User user = TShock.Users.GetUserByName(playerName);
+							if (user == null)
+								e.Player.SendErrorMessage("Invalid player or account '{0}'!", playerName);
+							else
+							{
+								if (await EssentialsPlus.Mutes.DeleteAsync(user))
+									TSPlayer.All.SendInfoMessage("{0} unmuted {1}.", e.Player.Name, user.Name);
+								else
+									e.Player.SendErrorMessage("Could not unmute, check logs for details.");
+							}
+						}
+						else if (players.Count > 1)
+							e.Player.SendErrorMessage("More than one player matched: {0}", String.Join(", ", players.Select(p => p.Name)));
 						else
 						{
-							if (await EssentialsPlus.Mutes.DeleteAsync(user))
-								TSPlayer.All.SendInfoMessage("{0} unmuted {1}.", e.Player.Name, user.Name);
+							if (await EssentialsPlus.Mutes.DeleteAsync(players[0]))
+							{
+								players[0].mute = false;
+								TSPlayer.All.SendInfoMessage("{0} unmuted {1}.", e.Player.Name, players[0].Name);
+							}
 							else
 								e.Player.SendErrorMessage("Could not unmute, check logs for details.");
 						}
 					}
-					else if (players.Count > 1)
-						e.Player.SendErrorMessage("More than one player matched: {0}", String.Join(", ", players.Select(p => p.Name)));
-					else
-					{
-						if (await EssentialsPlus.Mutes.DeleteAsync(players[0]))
-						{
-							players[0].mute = false;
-							TSPlayer.All.SendInfoMessage("{0} unmuted {1}.", e.Player.Name, players[0].Name);
-						}
-						else
-							e.Player.SendErrorMessage("Could not unmute, check logs for details.");
-					}
-				}
 					return;
 
-					#endregion
+				#endregion
 
-					#region Help
+				#region Help
 
 				default:
 					e.Player.SendSuccessMessage("Mute Sub-Commands:");
@@ -547,7 +547,7 @@ namespace EssentialsPlus
 					e.Player.SendInfoMessage("del <name> - Unmutes a player or account.");
 					return;
 
-					#endregion
+				#endregion
 			}
 		}
 

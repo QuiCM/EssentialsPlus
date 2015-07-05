@@ -9,7 +9,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("EssentialsPlus")]
-[assembly: AssemblyCopyright("Copyright © WhiteX et al. 2014")]
+[assembly: AssemblyCopyright("Copyright © WhiteX et al. 2014-2015")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

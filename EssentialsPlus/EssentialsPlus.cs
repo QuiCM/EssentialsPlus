@@ -15,7 +15,7 @@ using TShockAPI.Hooks;
 
 namespace EssentialsPlus
 {
-	[ApiVersion(1, 17)]
+	[ApiVersion(1, 18)]
 	public class EssentialsPlus : TerrariaPlugin
 	{
 		public static Config Config { get; private set; }
@@ -100,9 +100,9 @@ namespace EssentialsPlus
 			}
 
 			if (e.Player.TPlayer.hostile &&
-			    command.Names.Select(s => s.ToLowerInvariant())
-				    .Intersect(Config.DisabledCommandsInPvp.Select(s => s.ToLowerInvariant()))
-				    .Any())
+				command.Names.Select(s => s.ToLowerInvariant())
+					.Intersect(Config.DisabledCommandsInPvp.Select(s => s.ToLowerInvariant()))
+					.Any())
 			{
 				e.Player.SendErrorMessage("This command is blocked while in PvP!");
 				e.Handled = true;
@@ -313,7 +313,7 @@ namespace EssentialsPlus
 
 			switch (e.MsgID)
 			{
-					#region Packet 45 - PlayerKillMe
+				#region Packet 45 - PlayerKillMe
 
 				case PacketTypes.PlayerKillMe:
 					if (tsplayer.Group.HasPermission(Permissions.TpBack))
@@ -322,7 +322,7 @@ namespace EssentialsPlus
 					}
 					return;
 
-					#endregion
+				#endregion
 			}
 		}
 	}
