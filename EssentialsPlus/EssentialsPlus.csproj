@@ -37,9 +37,6 @@
     <Reference Include="MySql.Data">
       <HintPath>References\MySql.Data.dll</HintPath>
     </Reference>
-    <Reference Include="MySql.Web">
-      <HintPath>References\MySql.Web.dll</HintPath>
-    </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>References\Newtonsoft.Json.dll</HintPath>
     </Reference>
