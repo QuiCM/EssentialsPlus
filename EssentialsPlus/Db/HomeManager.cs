@@ -126,7 +126,7 @@ namespace EssentialsPlus.Db
 					lock (syncLock)
 					{
 						homes.Clear();
-						using (QueryResult result = db.QueryReader("SELECT * FROM Homes"))
+						using (QueryResult result = db.QueryReader("SELECT * FROM Homes WHERE WorldID = @0", Main.worldID))
 						{
 							while (result.Read())
 							{
