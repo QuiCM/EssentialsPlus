@@ -12,6 +12,7 @@ using Terraria;
 using TerrariaApi.Server;
 using TShockAPI;
 using TShockAPI.Hooks;
+using System.Collections.Generic;
 
 namespace EssentialsPlus
 {
@@ -84,6 +85,11 @@ namespace EssentialsPlus
 			e.Player.SendSuccessMessage("[EssentialsPlus] Reloaded config and homes!");
 		}
 
+		private List<string> teleportCommands = new List<string>
+		{
+			"tp", "tppos", "tpnpc", "warp", "spawn", "home"
+		};
+
 		private void OnPlayerCommand(PlayerCommandEventArgs e)
 		{
 			if (e.Handled || e.Player == null)
@@ -104,10 +110,17 @@ namespace EssentialsPlus
 			{
 				e.Player.SendErrorMessage("This command is blocked while in PvP!");
 				e.Handled = true;
+				return;
 			}
-			else if (e.Player.Group.HasPermission(Permissions.LastCommand) && command.CommandDelegate != Commands.RepeatLast)
+
+			if (e.Player.Group.HasPermission(Permissions.LastCommand) && command.CommandDelegate != Commands.RepeatLast)
 			{
 				e.Player.GetPlayerInfo().LastCommand = e.CommandText;
+			}
+			
+			if (teleportCommands.Contains(e.CommandName) && e.Player.Group.HasPermission(Permissions.TpBack))
+			{
+				e.Player.GetPlayerInfo().PushBackHistory(e.Player.TPlayer.position);
 			}
 		}
 
@@ -314,6 +327,33 @@ namespace EssentialsPlus
 					if (tsplayer.Group.HasPermission(Permissions.TpBack))
 					{
 						tsplayer.GetPlayerInfo().PushBackHistory(tsplayer.TPlayer.position);
+					}
+					return;
+
+				case PacketTypes.Teleport:
+					{
+						if (tsplayer.Group.HasPermission(Permissions.TpBack))
+						{
+							using (MemoryStream ms = new MemoryStream(e.Msg.readBuffer, e.Index, e.Length))
+							{
+								BitsByte flags = (byte)ms.ReadByte();
+
+								int type = 0;
+								if (flags[1])
+								{
+									type = 2;
+								}
+
+								if (type == 0 && tsplayer.Group.HasPermission(TShockAPI.Permissions.rod))
+								{
+									tsplayer.GetPlayerInfo().PushBackHistory(tsplayer.TPlayer.position);
+								}
+								else if (type == 2 && tsplayer.Group.HasPermission(TShockAPI.Permissions.wormhole))
+								{
+									tsplayer.GetPlayerInfo().PushBackHistory(tsplayer.TPlayer.position);
+								}
+							}
+						}
 					}
 					return;
 
