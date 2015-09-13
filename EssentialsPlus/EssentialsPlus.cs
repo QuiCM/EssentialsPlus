@@ -56,7 +56,6 @@ namespace EssentialsPlus
 				PlayerHooks.PlayerCommand -= OnPlayerCommand;
 
 				ServerApi.Hooks.GameInitialize.Deregister(this, OnInitialize);
-				ServerApi.Hooks.GamePostInitialize.Deregister(this, OnPostInitialize);
 				ServerApi.Hooks.NetGetData.Deregister(this, OnGetData);
 				ServerApi.Hooks.ServerJoin.Deregister(this, OnJoin);
 			}
@@ -69,7 +68,6 @@ namespace EssentialsPlus
 			PlayerHooks.PlayerCommand += OnPlayerCommand;
 
 			ServerApi.Hooks.GameInitialize.Register(this, OnInitialize);
-			ServerApi.Hooks.GamePostInitialize.Register(this, OnPostInitialize);
 			ServerApi.Hooks.NetGetData.Register(this, OnGetData);
 			ServerApi.Hooks.ServerJoin.Register(this, OnJoin);
 		}
@@ -259,6 +257,9 @@ namespace EssentialsPlus
 				throw new InvalidOperationException("Invalid storage type!");
 			}
 
+			Homes = new HomeManager(Db);
+			Mutes = new MuteManager(Db);
+
 			#endregion
 		}
 
@@ -290,12 +291,6 @@ namespace EssentialsPlus
 				{
 				}
 			}
-		}
-
-		private void OnPostInitialize(EventArgs e)
-		{
-			Homes = new HomeManager(Db);
-			Mutes = new MuteManager(Db);
 		}
 
 		private void OnGetData(GetDataEventArgs e)
