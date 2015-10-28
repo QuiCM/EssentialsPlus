@@ -50,9 +50,9 @@ namespace EssentialsPlus.Db
 				{
 					lock (syncLock)
 					{
-						homes.Add(new Home(player.UserID, name, x, y));
+						homes.Add(new Home(player.User.ID, name, x, y));
 						return db.Query("INSERT INTO Homes (UserID, Name, X, Y, WorldID) VALUES (@0, @1, @2, @3, @4)",
-							player.UserID,
+							player.User.ID,
 							name,
 							x,
 							y,
@@ -80,8 +80,8 @@ namespace EssentialsPlus.Db
 					lock (syncLock)
 					{
 						homes.RemoveAll(h => h.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase) 
-							&& h.UserID == player.UserID);
-						return db.Query(query, player.UserID, name, Main.worldID) > 0;
+							&& h.UserID == player.User.ID);
+						return db.Query(query, player.User.ID, name, Main.worldID) > 0;
 					}
 				}
 				catch (Exception ex)
@@ -101,7 +101,7 @@ namespace EssentialsPlus.Db
 					return
 						homes.Find(h => 
 							h.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase)
-							&& h.UserID == player.UserID);
+							&& h.UserID == player.User.ID);
 				}
 			});
 		}
@@ -112,7 +112,7 @@ namespace EssentialsPlus.Db
 			{
 				lock (syncLock)
 				{
-					return homes.FindAll(h => h.UserID == player.UserID);
+					return homes.FindAll(h => h.UserID == player.User.ID);
 				}
 			});
 		}
@@ -161,9 +161,9 @@ namespace EssentialsPlus.Db
 					lock (syncLock)
 					{
 						homes.RemoveAll(h => h.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase) 
-							&& h.UserID == player.UserID);
-						homes.Add(new Home(player.UserID, name, x, y));
-						return db.Query(query, x, y, player.UserID, name, Main.worldID) > 0;
+							&& h.UserID == player.User.ID);
+						homes.Add(new Home(player.User.ID, name, x, y));
+						return db.Query(query, x, y, player.User.ID, name, Main.worldID) > 0;
 					}
 				}
 				catch (Exception ex)
