@@ -600,7 +600,7 @@ namespace EssentialsPlus
 			Match match = regex.Match(e.Message);
 			if (!match.Success)
 			{
-				e.Player.SendErrorMessage("Invalid syntax! Proper syntax: {0}sendcolor [r,g,b] <text...>", TShock.Config.CommandSpecifier);
+				e.Player.SendErrorMessage("Invalid syntax! Proper syntax: {0}send [r,g,b] <text...>", TShock.Config.CommandSpecifier);
 				return;
 			}
 
