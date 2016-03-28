@@ -139,6 +139,55 @@ namespace EssentialsPlus
 
 			#endregion
 
+			#region Database
+
+			if (TShock.Config.StorageType.Equals("mysql", StringComparison.OrdinalIgnoreCase))
+			{
+				if (string.IsNullOrWhiteSpace(Config.MySqlHost) ||
+					string.IsNullOrWhiteSpace(Config.MySqlDbName))
+				{
+					Console.ForegroundColor = ConsoleColor.Red;
+					Console.WriteLine("[Essentials+] MySQL is enabled, but the Essentials+ MySQL Configuration has not been set.");
+					Console.WriteLine("[Essentials+] Please configure your MySQL server information in essentials.json, then restart the server.");
+					Console.WriteLine("[Essentials+] This plugin will now disable itself...");
+					Console.ResetColor();
+
+					GeneralHooks.ReloadEvent -= OnReload;
+					PlayerHooks.PlayerCommand -= OnPlayerCommand;
+
+					ServerApi.Hooks.GameInitialize.Deregister(this, OnInitialize);
+					ServerApi.Hooks.GamePostInitialize.Deregister(this, OnPostInitialize);
+					ServerApi.Hooks.NetGetData.Deregister(this, OnGetData);
+					ServerApi.Hooks.ServerJoin.Deregister(this, OnJoin);
+
+					return;
+				}
+
+				string[] host = Config.MySqlHost.Split(':');
+				Db = new MySqlConnection
+				{
+					ConnectionString = String.Format("Server={0}; Port={1}; Database={2}; Uid={3}; Pwd={4};",
+						host[0],
+						host.Length == 1 ? "3306" : host[1],
+						Config.MySqlDbName,
+						Config.MySqlUsername,
+						Config.MySqlPassword)
+				};
+			}
+			else if (TShock.Config.StorageType.Equals("sqlite", StringComparison.OrdinalIgnoreCase))
+			{
+				Db = new SqliteConnection(
+					"uri=file://" + Path.Combine(TShock.SavePath, "essentials.sqlite") + ",Version=3");
+			}
+			else
+			{
+				throw new InvalidOperationException("Invalid storage type!");
+			}
+
+			Mutes = new MuteManager(Db);
+
+			#endregion
+
 			#region Commands
 
 			//Allows overriding of already created commands.
@@ -244,35 +293,6 @@ namespace EssentialsPlus
 				AllowServer = false,
 				HelpText = "Teleports you up through a layer of blocks."
 			});
-
-			#endregion
-
-			#region Database
-
-			if (TShock.Config.StorageType.Equals("mysql", StringComparison.OrdinalIgnoreCase))
-			{
-				string[] host = Config.MySqlHost.Split(':');
-				Db = new MySqlConnection
-				{
-					ConnectionString = String.Format("Server={0}; Port={1}; Database={2}; Uid={3}; Pwd={4};",
-						host[0],
-						host.Length == 1 ? "3306" : host[1],
-						Config.MySqlDbName,
-						Config.MySqlUsername,
-						Config.MySqlPassword)
-				};
-			}
-			else if (TShock.Config.StorageType.Equals("sqlite", StringComparison.OrdinalIgnoreCase))
-			{
-				Db = new SqliteConnection(
-					"uri=file://" + Path.Combine(TShock.SavePath, "essentials.sqlite") + ",Version=3");
-			}
-			else
-			{
-				throw new InvalidOperationException("Invalid storage type!");
-			}
-
-			Mutes = new MuteManager(Db);
 
 			#endregion
 		}
