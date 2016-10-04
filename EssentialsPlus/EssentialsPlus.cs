@@ -16,7 +16,7 @@ using System.Collections.Generic;
 
 namespace EssentialsPlus
 {
-	[ApiVersion(1, 22)]
+	[ApiVersion(1, 23)]
 	public class EssentialsPlus : TerrariaPlugin
 	{
 		public static Config Config { get; private set; }

@@ -9,6 +9,8 @@ namespace EssentialsPlus
 		private CancellationTokenSource mute = new CancellationTokenSource();
 		private CancellationTokenSource timeCmd = new CancellationTokenSource();
 
+		public const string KEY = "EssentialsPlus_Data";
+
 		public int BackHistoryCount
 		{
 			get { return backHistory.Count; }
