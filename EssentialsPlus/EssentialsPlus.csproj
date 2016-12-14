@@ -40,6 +40,9 @@
     <Reference Include="Newtonsoft.Json">
       <HintPath>References\Newtonsoft.Json.dll</HintPath>
     </Reference>
+    <Reference Include="OTAPI">
+      <HintPath>References\OTAPI.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -62,7 +65,7 @@
     <Compile Include="Db\MuteManager.cs" />
     <Compile Include="EssentialsPlus.cs" />
     <Compile Include="Extensions\GroupExtensions.cs" />
-    <Compile Include="Extensions\TileExtensions.cs" />
+    <Compile Include="Extensions\ITileExtensions.cs" />
     <Compile Include="Extensions\TSPlayerExtensions.cs" />
     <Compile Include="Permissions.cs" />
     <Compile Include="PlayerInfo.cs" />

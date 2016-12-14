@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using EssentialsPlus.Db;
 using EssentialsPlus.Extensions;
+using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
 using TShockAPI;
