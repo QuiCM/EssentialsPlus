@@ -16,7 +16,7 @@ using TShockAPI.Hooks;
 
 namespace EssentialsPlus
 {
-	[ApiVersion(2, 0)]
+	[ApiVersion(2, 1)]
 	public class EssentialsPlus : TerrariaPlugin
 	{
 		public static Config Config { get; private set; }
@@ -119,7 +119,7 @@ namespace EssentialsPlus
 			{
 				e.Player.GetPlayerInfo().LastCommand = e.CommandText;
 			}
-			
+
 			if (teleportCommands.Contains(e.CommandName) && e.Player.Group.HasPermission(Permissions.TpBack))
 			{
 				e.Player.GetPlayerInfo().PushBackHistory(e.Player.TPlayer.position);
@@ -296,7 +296,7 @@ namespace EssentialsPlus
 
 			#endregion
 		}
-		
+
 		private void OnPostInitialize(EventArgs args)
 		{
 			Homes = new HomeManager(Db);
@@ -383,7 +383,7 @@ namespace EssentialsPlus
 					}
 					return;
 
-				#endregion
+					#endregion
 			}
 		}
 	}

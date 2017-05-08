@@ -84,16 +84,16 @@ namespace EssentialsPlus
 						{
 							var item = new Item();
 							item.netDefaults(i);
-							if (item.name.ContainsInsensitive(match.Groups[2].Value))
+							if (item.HoverName.ContainsInsensitive(match.Groups[2].Value))
 							{
-								items.Add(String.Format("{0} (ID: {1})", item.name, i));
+								items.Add(String.Format("{0} (ID: {1})", item.HoverName, i));
 							}
 						}
-						for (int i = 0; i < Main.itemName.Length; i++)
+						for (int i = 0; i < Main.hoverItemName.Length; i++)
 						{
-							if (Main.itemName[i].ContainsInsensitive(match.Groups[2].Value))
+							if (Main.hoverItemName.ContainsInsensitive(match.Groups[2].Value))
 							{
-								items.Add(String.Format("{0} (ID: {1})", Main.itemName[i], i));
+								items.Add(String.Format("{0} (ID: {1})", Main.hoverItemName[i], i));
 							}
 						}
 					});
@@ -119,12 +119,13 @@ namespace EssentialsPlus
 						for (int i = -65; i < 0; i++)
 						{
 							var npc = new NPC();
-							npc.netDefaults(i);
-							if (npc.name.ContainsInsensitive(match.Groups[2].Value))
+							npc.SetDefaults(i);
+							if (npc.FullName.ContainsInsensitive(match.Groups[2].Value))
 							{
-								npcs.Add(String.Format("{0} (ID: {1})", npc.name, i));
+								npcs.Add(String.Format("{0} (ID: {1})", npc.FullName, i));
 							}
 						}
+						/* Not sure what to change the Main.npcName signature to
 						for (int i = 0; i < Main.npcName.Count(); i++)
 						{
 							if (Main.npcName[i].ContainsInsensitive(match.Groups[2].Value))
@@ -132,6 +133,7 @@ namespace EssentialsPlus
 								npcs.Add(String.Format("{0} (ID: {1})", Main.npcName[i], i));
 							}
 						}
+						*/
 					});
 
 					PaginationTools.SendPage(e.Player, page, npcs,
@@ -556,6 +558,7 @@ namespace EssentialsPlus
 		{
 			e.TPlayer.hostile = !e.TPlayer.hostile;
 			TSPlayer.All.SendData(PacketTypes.TogglePvp, "", e.Player.Index);
+			// TODO: Convert Lang.mp to Language.GetText equivalent
 			TSPlayer.All.SendMessage(String.Format("{0} {1}", e.Player.Name, e.TPlayer.hostile ? Lang.mp[11] : Lang.mp[12]), Main.teamColor[e.Player.Team]);
 		}
 
@@ -671,13 +674,14 @@ namespace EssentialsPlus
 				if (!e.Player.Group.HasPermission(Permissions.SudoInvisible))
 					players[0].SendInfoMessage("{0} forced you to execute {1}{2}.", e.Player.Name, TShock.Config.CommandSpecifier, command);
 
-				var fakePlayer = new TSPlayer(players[0].Index);
-				fakePlayer.AwaitingName = players[0].AwaitingName;
-				fakePlayer.AwaitingNameParameters = players[0].AwaitingNameParameters;
-				fakePlayer.AwaitingTempPoint = players[0].AwaitingTempPoint;
-				fakePlayer.Group = force ? new SuperAdminGroup() : players[0].Group;
-				fakePlayer.TempPoints = players[0].TempPoints;
-
+				var fakePlayer = new TSPlayer(players[0].Index)
+				{
+					AwaitingName = players[0].AwaitingName,
+					AwaitingNameParameters = players[0].AwaitingNameParameters,
+					AwaitingTempPoint = players[0].AwaitingTempPoint,
+					Group = force ? new SuperAdminGroup() : players[0].Group,
+					TempPoints = players[0].TempPoints
+				};
 				await Task.Run(() => TShockAPI.Commands.HandleCommand(fakePlayer, TShock.Config.CommandSpecifier + command));
 
 				players[0].AwaitingName = fakePlayer.AwaitingName;
@@ -715,8 +719,7 @@ namespace EssentialsPlus
 				}
 			}
 
-			int seconds;
-			if (!TShock.Utils.TryParseTime(match.Groups[2].Value, out seconds) || seconds <= 0 || seconds > Int32.MaxValue / 1000)
+			if (!TShock.Utils.TryParseTime(match.Groups[2].Value, out int seconds) || seconds <= 0 || seconds > Int32.MaxValue / 1000)
 			{
 				e.Player.SendErrorMessage("Invalid time '{0}'!", match.Groups[2].Value);
 				return;
