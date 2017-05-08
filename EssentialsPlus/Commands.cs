@@ -11,6 +11,7 @@ using EssentialsPlus.Extensions;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
+using Terraria.Localization;
 using TShockAPI;
 using TShockAPI.DB;
 
@@ -89,11 +90,11 @@ namespace EssentialsPlus
 								items.Add(String.Format("{0} (ID: {1})", item.HoverName, i));
 							}
 						}
-						for (int i = 0; i < Main.hoverItemName.Length; i++)
+						for (int i = 0; i < ItemID.Count; i++)
 						{
-							if (Main.hoverItemName.ContainsInsensitive(match.Groups[2].Value))
+							if (Lang.GetItemNameValue(i).ContainsInsensitive(match.Groups[2].Value))
 							{
-								items.Add(String.Format("{0} (ID: {1})", Main.hoverItemName[i], i));
+								items.Add(String.Format("{0} (ID: {1})", Lang.GetItemNameValue(i), i));
 							}
 						}
 					});
@@ -125,15 +126,13 @@ namespace EssentialsPlus
 								npcs.Add(String.Format("{0} (ID: {1})", npc.FullName, i));
 							}
 						}
-						/* Not sure what to change the Main.npcName signature to
-						for (int i = 0; i < Main.npcName.Count(); i++)
+						for (int i = 0; i < NPCID.Count; i++)
 						{
-							if (Main.npcName[i].ContainsInsensitive(match.Groups[2].Value))
+							if (Lang.GetNPCNameValue(i).ContainsInsensitive(match.Groups[2].Value))
 							{
-								npcs.Add(String.Format("{0} (ID: {1})", Main.npcName[i], i));
+								npcs.Add(String.Format("{0} (ID: {1})", Lang.GetNPCNameValue(i), i));
 							}
 						}
-						*/
 					});
 
 					PaginationTools.SendPage(e.Player, page, npcs,
@@ -557,9 +556,9 @@ namespace EssentialsPlus
 		public static void PvP(CommandArgs e)
 		{
 			e.TPlayer.hostile = !e.TPlayer.hostile;
+			string hostile = Language.GetTextValue(e.TPlayer.hostile ? "LegacyMultiplayer.11" : "LegacyMultiplayer.12", e.Player.Name);
 			TSPlayer.All.SendData(PacketTypes.TogglePvp, "", e.Player.Index);
-			// TODO: Convert Lang.mp to Language.GetText equivalent
-			TSPlayer.All.SendMessage(String.Format("{0} {1}", e.Player.Name, e.TPlayer.hostile ? Lang.mp[11] : Lang.mp[12]), Main.teamColor[e.Player.Team]);
+			TSPlayer.All.SendMessage(hostile, Main.teamColor[e.Player.Team]);
 		}
 
 		public static void Ruler(CommandArgs e)
