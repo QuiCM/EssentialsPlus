@@ -404,6 +404,41 @@ namespace EssentialsPlus
 			await Task.Run(() => TShockAPI.Commands.HandleCommand(e.Player, TShock.Config.CommandSpecifier + lastCommand));
 		}
 
+		public static async void More(CommandArgs e)
+		{
+			await Task.Run(() =>
+			{
+				if (e.Parameters.Count > 0 && e.Parameters[0].ToLower() == "all")
+				{
+					bool full = true;
+					foreach (Item item in e.TPlayer.inventory)
+					{
+						if (item == null || item.stack == 0) continue;
+						int amtToAdd = item.maxStack - item.stack;
+						if (amtToAdd > 0 && item.stack > 0 && !item.Name.ToLower().Contains("coin"))
+						{
+							full = false;
+							e.Player.GiveItem(item.type, item.Name, item.width, item.height, amtToAdd);
+						}
+					}
+					if (!full)
+						e.Player.SendSuccessMessage("Filled all your items.");
+					else
+						e.Player.SendErrorMessage("Your inventory is already full.");
+				}
+				else
+				{
+					Item item = e.Player.TPlayer.inventory[e.TPlayer.selectedItem];
+					int amtToAdd = item.maxStack - item.stack;
+					if (amtToAdd == 0)
+						e.Player.SendErrorMessage("Your {0} is already full.", item.Name);
+					else if (amtToAdd > 0 && item.stack > 0)
+						e.Player.GiveItem(item.type, item.Name, item.width, item.height, amtToAdd);
+						e.Player.SendSuccessMessage("Filled up your {0}.", item.Name);
+				}
+			});
+		}
+
 		public static async void Mute(CommandArgs e)
 		{
 			string subCmd = e.Parameters.FirstOrDefault() ?? "help";

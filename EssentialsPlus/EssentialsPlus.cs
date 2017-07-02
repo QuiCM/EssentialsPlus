@@ -235,6 +235,12 @@ namespace EssentialsPlus
 				HelpText = "Allows you to repeat your last command."
 			});
 
+			Add(new Command(Permissions.More, Commands.More, "more")
+			{
+				AllowServer = false,
+				HelpText = "Maximizes item stack of held item."
+			});
+
 			//This will override TShock's 'mute' command
 			Add(new Command(Permissions.Mute, Commands.Mute, "mute")
 			{
