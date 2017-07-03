@@ -1,6 +1,6 @@
 # EssentialsPlus #
 
-![](https://img.shields.io/badge/Version-1.2.0-blue.svg) ![](https://img.shields.io/badge/API-2.1-green.svg)
+![](https://img.shields.io/badge/Version-1.3.0-blue.svg) ![](https://img.shields.io/badge/API-2.1-green.svg)
 
 Essentials+ is a combination of things from Essentials and things from MoreAdminCommands made better. All commands run asynchronously.
 It does not include Sign Commands.
@@ -18,6 +18,8 @@ It does not include Sign Commands.
     /myhome <home name> -> Teleports you to your house named <home name>.
     /kickall <flag> <reason> -> Kicks every player for <reason>. Valid flag: -nosave -> kick doesn't save SSC inventory.
     /= -> Repeats your last entered command (not including other iterations of /=).
+	/more -> Maximizes item stack of held item. Subcommands:
+		all -> Maximizes all stackable items in the player's inventory
     /mute -> Overwrites TShock's /mute. Has subcommands:
         add <name> <time> -> Adds a mute on user with name <name> for <time>
         delete <name> -> Removes a mute on user with name <name>
@@ -40,6 +42,7 @@ It does not include Sign Commands.
 	essentials.home.tp -> Grants access to the /myhome command.
 	essentials.kickall -> Grants access to the /kickall command.
 	essentials.lastcommand -> Grants access to the /= command.
+	essentials.more -> Grants access to the /more command.
 	essentials.mute -> Grants access to the improved /mute command.
 	essentials.pvp -> Grants access to the /pvp command.
 	essentials.ruler -> Grants access to the /ruler command.
