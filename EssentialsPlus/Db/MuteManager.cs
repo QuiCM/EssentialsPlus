@@ -59,7 +59,7 @@ namespace EssentialsPlus.Db
 				}
 			});
 		}
-		public async Task<bool> AddAsync(User user, DateTime expiration)
+		public async Task<bool> AddAsync(UserAccount user, DateTime expiration)
 		{
 			return await Task.Run(() =>
 			{
@@ -110,7 +110,7 @@ namespace EssentialsPlus.Db
 				}
 			});
 		}
-		public async Task<bool> DeleteAsync(User user)
+		public async Task<bool> DeleteAsync(UserAccount user)
 		{
 			return await Task.Run(() =>
 			{
