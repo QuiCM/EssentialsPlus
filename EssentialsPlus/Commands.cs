@@ -26,8 +26,8 @@ namespace EssentialsPlus
 			if (!match.Success)
 			{
 				e.Player.SendErrorMessage("Invalid syntax! Proper syntax: {0}find <-switch> <name...> [page]",
-					TShock.Config.CommandSpecifier);
-				e.Player.SendSuccessMessage("Valid {0}find switches:", TShock.Config.CommandSpecifier);
+					TShock.Config.Settings.CommandSpecifier);
+				e.Player.SendSuccessMessage("Valid {0}find switches:", TShock.Config.Settings.CommandSpecifier);
 				e.Player.SendInfoMessage("-command: Finds a command.");
 				e.Player.SendInfoMessage("-item: Finds an item.");
 				e.Player.SendInfoMessage("-npc: Finds an NPC.");
@@ -229,7 +229,7 @@ namespace EssentialsPlus
 				#endregion
 
 				default:
-					e.Player.SendSuccessMessage("Valid {0}find switches:", TShock.Config.CommandSpecifier);
+					e.Player.SendSuccessMessage("Valid {0}find switches:", TShock.Config.Settings.CommandSpecifier);
 					e.Player.SendInfoMessage("-command: Finds a command.");
 					e.Player.SendInfoMessage("-item: Finds an item.");
 					e.Player.SendInfoMessage("-npc: Finds an NPC.");
@@ -270,7 +270,7 @@ namespace EssentialsPlus
 		{
 			if (e.Parameters.Count > 1)
 			{
-				e.Player.SendErrorMessage("Invalid syntax! Proper syntax: {0}delhome <home name>", TShock.Config.CommandSpecifier);
+				e.Player.SendErrorMessage("Invalid syntax! Proper syntax: {0}delhome <home name>", TShock.Config.Settings.CommandSpecifier);
 				return;
 			}
 
@@ -297,7 +297,7 @@ namespace EssentialsPlus
 		{
 			if (e.Parameters.Count > 1)
 			{
-				e.Player.SendErrorMessage("Invalid syntax! Proper syntax: {0}myhome <home name>", TShock.Config.CommandSpecifier);
+				e.Player.SendErrorMessage("Invalid syntax! Proper syntax: {0}myhome <home name>", TShock.Config.Settings.CommandSpecifier);
 				return;
 			}
 
@@ -325,7 +325,7 @@ namespace EssentialsPlus
 		{
 			if (e.Parameters.Count > 1)
 			{
-				e.Player.SendErrorMessage("Invalid syntax! Proper syntax: {0}sethome <home name>", TShock.Config.CommandSpecifier);
+				e.Player.SendErrorMessage("Invalid syntax! Proper syntax: {0}sethome <home name>", TShock.Config.Settings.CommandSpecifier);
 				return;
 			}
 
@@ -372,7 +372,7 @@ namespace EssentialsPlus
 						noSave = true;
 						continue;
 					default:
-						e.Player.SendSuccessMessage("Valid {0}kickall switches:", TShock.Config.CommandSpecifier);
+						e.Player.SendSuccessMessage("Valid {0}kickall switches:", TShock.Config.Settings.CommandSpecifier);
 						e.Player.SendInfoMessage("-nosave: Kicks without saving SSC data.");
 						return;
 				}
@@ -400,8 +400,8 @@ namespace EssentialsPlus
 				return;
 			}
 
-			e.Player.SendSuccessMessage("Repeated last command '{0}{1}'!", TShock.Config.CommandSpecifier, lastCommand);
-			await Task.Run(() => TShockAPI.Commands.HandleCommand(e.Player, TShock.Config.CommandSpecifier + lastCommand));
+			e.Player.SendSuccessMessage("Repeated last command '{0}{1}'!", TShock.Config.Settings.CommandSpecifier, lastCommand);
+			await Task.Run(() => TShockAPI.Commands.HandleCommand(e.Player, TShock.Config.Settings.CommandSpecifier + lastCommand));
 		}
 
 		public static async void More(CommandArgs e)
@@ -626,10 +626,10 @@ namespace EssentialsPlus
 					e.Player.SendInfoMessage("Modify a block to set the second ruler point.");
 				}
 				else
-					e.Player.SendErrorMessage("Invalid syntax! Proper syntax: {0}ruler [1/2]", TShock.Config.CommandSpecifier);
+					e.Player.SendErrorMessage("Invalid syntax! Proper syntax: {0}ruler [1/2]", TShock.Config.Settings.CommandSpecifier);
 			}
 			else
-				e.Player.SendErrorMessage("Invalid syntax! Proper syntax: {0}ruler [1/2]", TShock.Config.CommandSpecifier);
+				e.Player.SendErrorMessage("Invalid syntax! Proper syntax: {0}ruler [1/2]", TShock.Config.Settings.CommandSpecifier);
 		}
 
 		public static void Send(CommandArgs e)
@@ -638,7 +638,7 @@ namespace EssentialsPlus
 			Match match = regex.Match(e.Message);
 			if (!match.Success)
 			{
-				e.Player.SendErrorMessage("Invalid syntax! Proper syntax: {0}send [r,g,b] <text...>", TShock.Config.CommandSpecifier);
+				e.Player.SendErrorMessage("Invalid syntax! Proper syntax: {0}send [r,g,b] <text...>", TShock.Config.Settings.CommandSpecifier);
 				return;
 			}
 
@@ -656,12 +656,12 @@ namespace EssentialsPlus
 
 		public static async void Sudo(CommandArgs e)
 		{
-			var regex = new Regex(String.Format(@"^\w+(?: -(\w+))* (?:""(.+?)""|([^\s]*?)) (?:{0})?(.+)$", TShock.Config.CommandSpecifier));
+			var regex = new Regex(String.Format(@"^\w+(?: -(\w+))* (?:""(.+?)""|([^\s]*?)) (?:{0})?(.+)$", TShock.Config.Settings.CommandSpecifier));
 			Match match = regex.Match(e.Message);
 			if (!match.Success)
 			{
-				e.Player.SendErrorMessage("Invalid syntax! Proper syntax: {0}sudo [-switches...] <player> <command...>", TShock.Config.CommandSpecifier);
-				e.Player.SendSuccessMessage("Valid {0}sudo switches:", TShock.Config.CommandSpecifier);
+				e.Player.SendErrorMessage("Invalid syntax! Proper syntax: {0}sudo [-switches...] <player> <command...>", TShock.Config.Settings.CommandSpecifier);
+				e.Player.SendSuccessMessage("Valid {0}sudo switches:", TShock.Config.Settings.CommandSpecifier);
 				e.Player.SendInfoMessage("-f, -force: Force sudo, ignoring permissions.");
 				return;
 			}
@@ -681,7 +681,7 @@ namespace EssentialsPlus
 						force = true;
 						continue;
 					default:
-						e.Player.SendSuccessMessage("Valid {0}sudo switches:", TShock.Config.CommandSpecifier);
+						e.Player.SendSuccessMessage("Valid {0}sudo switches:", TShock.Config.Settings.CommandSpecifier);
 						e.Player.SendInfoMessage("-f, -force: Force sudo, ignoring permissions.");
 						return;
 				}
@@ -700,13 +700,13 @@ namespace EssentialsPlus
 				if ((e.Player.Group.GetDynamicPermission(Permissions.Sudo) <= players[0].Group.GetDynamicPermission(Permissions.Sudo))
 					&& !e.Player.Group.HasPermission(Permissions.SudoSuper))
 				{
-					e.Player.SendErrorMessage("You cannot force {0} to execute {1}{2}!", players[0].Name, TShock.Config.CommandSpecifier, command);
+					e.Player.SendErrorMessage("You cannot force {0} to execute {1}{2}!", players[0].Name, TShock.Config.Settings.CommandSpecifier, command);
 					return;
 				}
 
-				e.Player.SendSuccessMessage("Forced {0} to execute {1}{2}.", players[0].Name, TShock.Config.CommandSpecifier, command);
+				e.Player.SendSuccessMessage("Forced {0} to execute {1}{2}.", players[0].Name, TShock.Config.Settings.CommandSpecifier, command);
 				if (!e.Player.Group.HasPermission(Permissions.SudoInvisible))
-					players[0].SendInfoMessage("{0} forced you to execute {1}{2}.", e.Player.Name, TShock.Config.CommandSpecifier, command);
+					players[0].SendInfoMessage("{0} forced you to execute {1}{2}.", e.Player.Name, TShock.Config.Settings.CommandSpecifier, command);
 
 				var fakePlayer = new TSPlayer(players[0].Index)
 				{
@@ -716,7 +716,7 @@ namespace EssentialsPlus
 					Group = force ? new SuperAdminGroup() : players[0].Group,
 					TempPoints = players[0].TempPoints
 				};
-				await Task.Run(() => TShockAPI.Commands.HandleCommand(fakePlayer, TShock.Config.CommandSpecifier + command));
+				await Task.Run(() => TShockAPI.Commands.HandleCommand(fakePlayer, TShock.Config.Settings.CommandSpecifier + command));
 
 				players[0].AwaitingName = fakePlayer.AwaitingName;
 				players[0].AwaitingNameParameters = fakePlayer.AwaitingNameParameters;
@@ -727,12 +727,12 @@ namespace EssentialsPlus
 
 		public static async void TimeCmd(CommandArgs e)
 		{
-			var regex = new Regex(String.Format(@"^\w+(?: -(\w+))* (\w+) (?:{0})?(.+)$", TShock.Config.CommandSpecifier));
+			var regex = new Regex(String.Format(@"^\w+(?: -(\w+))* (\w+) (?:{0})?(.+)$", TShock.Config.Settings.CommandSpecifier));
 			Match match = regex.Match(e.Message);
 			if (!match.Success)
 			{
-				e.Player.SendErrorMessage("Invalid syntax! Proper syntax: {0}timecmd [-switches...] <time> <command...>", TShock.Config.CommandSpecifier);
-				e.Player.SendSuccessMessage("Valid {0}timecmd switches:", TShock.Config.CommandSpecifier);
+				e.Player.SendErrorMessage("Invalid syntax! Proper syntax: {0}timecmd [-switches...] <time> <command...>", TShock.Config.Settings.CommandSpecifier);
+				e.Player.SendSuccessMessage("Valid {0}timecmd switches:", TShock.Config.Settings.CommandSpecifier);
 				e.Player.SendInfoMessage("-r, -repeat: Repeats the time command indefinitely.");
 				return;
 			}
@@ -747,7 +747,7 @@ namespace EssentialsPlus
 						repeat = true;
 						break;
 					default:
-						e.Player.SendSuccessMessage("Valid {0}timecmd switches:", TShock.Config.CommandSpecifier);
+						e.Player.SendSuccessMessage("Valid {0}timecmd switches:", TShock.Config.Settings.CommandSpecifier);
 						e.Player.SendInfoMessage("-r, -repeat: Repeats the time command indefinitely.");
 						return;
 				}
@@ -760,9 +760,9 @@ namespace EssentialsPlus
 			}
 
 			if (repeat)
-				e.Player.SendSuccessMessage("Queued command '{0}{1}' indefinitely. Use /cancel to cancel!", TShock.Config.CommandSpecifier, match.Groups[3].Value);
+				e.Player.SendSuccessMessage("Queued command '{0}{1}' indefinitely. Use /cancel to cancel!", TShock.Config.Settings.CommandSpecifier, match.Groups[3].Value);
 			else
-				e.Player.SendSuccessMessage("Queued command '{0}{1}'. Use /cancel to cancel!", TShock.Config.CommandSpecifier, match.Groups[3].Value);
+				e.Player.SendSuccessMessage("Queued command '{0}{1}'. Use /cancel to cancel!", TShock.Config.Settings.CommandSpecifier, match.Groups[3].Value);
 			e.Player.AddResponse("cancel", o =>
 			{
 				e.Player.GetPlayerInfo().CancelTimeCmd();
@@ -777,7 +777,7 @@ namespace EssentialsPlus
 					do
 					{
 						await Task.Delay(TimeSpan.FromSeconds(seconds), token);
-						TShockAPI.Commands.HandleCommand(e.Player, TShock.Config.CommandSpecifier + match.Groups[3].Value);
+						TShockAPI.Commands.HandleCommand(e.Player, TShock.Config.Settings.CommandSpecifier + match.Groups[3].Value);
 					}
 					while (repeat);
 				}, token);
@@ -791,7 +791,7 @@ namespace EssentialsPlus
 		{
 			if (e.Parameters.Count > 1)
 			{
-				e.Player.SendErrorMessage("Invalid syntax! Proper syntax: {0}back [steps]", TShock.Config.CommandSpecifier);
+				e.Player.SendErrorMessage("Invalid syntax! Proper syntax: {0}back [steps]", TShock.Config.Settings.CommandSpecifier);
 				return;
 			}
 
@@ -818,7 +818,7 @@ namespace EssentialsPlus
 		{
 			if (e.Parameters.Count > 1)
 			{
-				e.Player.SendErrorMessage("Invalid syntax! Correct syntax: {0}down [levels]", TShock.Config.CommandSpecifier);
+				e.Player.SendErrorMessage("Invalid syntax! Correct syntax: {0}down [levels]", TShock.Config.Settings.CommandSpecifier);
 				return;
 			}
 
@@ -867,7 +867,7 @@ namespace EssentialsPlus
 		{
 			if (e.Parameters.Count > 1)
 			{
-				e.Player.SendErrorMessage("Invalid syntax! Correct syntax: {0}left [levels]", TShock.Config.CommandSpecifier);
+				e.Player.SendErrorMessage("Invalid syntax! Correct syntax: {0}left [levels]", TShock.Config.Settings.CommandSpecifier);
 				return;
 			}
 
@@ -917,7 +917,7 @@ namespace EssentialsPlus
 		{
 			if (e.Parameters.Count > 1)
 			{
-				e.Player.SendErrorMessage("Invalid syntax! Correct syntax: {0}right [levels]", TShock.Config.CommandSpecifier);
+				e.Player.SendErrorMessage("Invalid syntax! Correct syntax: {0}right [levels]", TShock.Config.Settings.CommandSpecifier);
 				return;
 			}
 
@@ -967,7 +967,7 @@ namespace EssentialsPlus
 		{
 			if (e.Parameters.Count > 1)
 			{
-				e.Player.SendErrorMessage("Invalid syntax! Correct syntax: {0}up [levels]", TShock.Config.CommandSpecifier);
+				e.Player.SendErrorMessage("Invalid syntax! Correct syntax: {0}up [levels]", TShock.Config.Settings.CommandSpecifier);
 				return;
 			}
 
