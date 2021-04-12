@@ -141,7 +141,7 @@ namespace EssentialsPlus
 
 			#region Database
 
-			if (TShock.Config.StorageType.Equals("mysql", StringComparison.OrdinalIgnoreCase))
+			if (TShock.Config.Settings.StorageType.Equals("mysql", StringComparison.OrdinalIgnoreCase))
 			{
 				if (string.IsNullOrWhiteSpace(Config.MySqlHost) ||
 					string.IsNullOrWhiteSpace(Config.MySqlDbName))
@@ -174,7 +174,7 @@ namespace EssentialsPlus
 						Config.MySqlPassword)
 				};
 			}
-			else if (TShock.Config.StorageType.Equals("sqlite", StringComparison.OrdinalIgnoreCase))
+			else if (TShock.Config.Settings.StorageType.Equals("sqlite", StringComparison.OrdinalIgnoreCase))
 			{
 				Db = new SqliteConnection(
 					"uri=file://" + Path.Combine(TShock.SavePath, "essentials.sqlite") + ",Version=3");
