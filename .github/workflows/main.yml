@@ -1,0 +1,30 @@
+name: BuildRelease
+
+on:
+  push:
+    tags:
+    - '*'
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Fetch TShock
+      run: curl -L "https://github.com/Pryaxis/TShock/releases/download/v4.5.4/TShock4.5.4_Terraria1.4.2.3.zip" > tshock.zip
+      shell: cmd
+    - name: Decompress
+      run: 7z.exe e tshock.zip -oEssentialsPlus\References "ServerPlugins/TShockAPI.dll" "Newtonsoft.Json.dll" "Mono.Data.Sqlite.dll" "MySql.Data.dll" "TerrariaServer.exe" "OTAPI.dll" -r
+      shell: cmd
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v1.0.2
+    - name: Build
+      run: msbuild EssentialsPlus.sln /p:Configuration=Release
+    - name: Create release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: EssentialsPlus\bin\Release\EssentialsPlus.dll
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
