@@ -13,7 +13,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Fetch TShock
-      run: curl -L "https://github.com/Pryaxis/TShock/releases/download/v4.5.4/TShock4.5.4_Terraria1.4.2.3.zip" > tshock.zip
+      run: curl -L "https://ghd.one/Pryaxis/TShock?includes=TShock&excludes=&download=true" > tshock.zip
       shell: cmd
     - name: Decompress
       run: 7z.exe e tshock.zip -oEssentialsPlus\References "ServerPlugins/TShockAPI.dll" "Newtonsoft.Json.dll" "Mono.Data.Sqlite.dll" "MySql.Data.dll" "TerrariaServer.exe" "OTAPI.dll" -r
