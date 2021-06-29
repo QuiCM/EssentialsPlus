@@ -17,6 +17,7 @@ jobs:
         $r = curl -UseBasicParsing -H @{'Accept' = 'application/vnd.github.v3+json'} https://api.github.com/repos/Pryaxis/TShock/releases/latest
         $parsed = $r.content |ConvertFrom-Json
         Invoke-WebRequest $parsed.assets.browser_download_url -outfile tshock.zip
+      shell: powershell
     - name: Decompress
       run: 7z.exe e tshock.zip -oEssentialsPlus\References "ServerPlugins/TShockAPI.dll" "Newtonsoft.Json.dll" "Mono.Data.Sqlite.dll" "MySql.Data.dll" "TerrariaServer.exe" "OTAPI.dll" -r
       shell: cmd
