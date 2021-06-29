@@ -13,8 +13,10 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Fetch TShock
-      run: curl -L "https://ghd.one/Pryaxis/TShock?includes=TShock&excludes=&download=true" > tshock.zip
-      shell: cmd
+      run: |
+        $r = curl -UseBasicParsing -H @{'Accept' = 'application/vnd.github.v3+json'} https://api.github.com/repos/Pryaxis/TShock/releases
+        $parsed = $r.content |ConvertFrom-Json
+        Invoke-WebRequest $parsed.assets.browser_download_url -outfile tshock.zip
     - name: Decompress
       run: 7z.exe e tshock.zip -oEssentialsPlus\References "ServerPlugins/TShockAPI.dll" "Newtonsoft.Json.dll" "Mono.Data.Sqlite.dll" "MySql.Data.dll" "TerrariaServer.exe" "OTAPI.dll" -r
       shell: cmd
