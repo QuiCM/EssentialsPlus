@@ -1,7 +1,6 @@
 name: BuildRelease
 
 on:
-  workflow_dispatch:
   push:
     tags:
     - '*'
