@@ -1,0 +1,33 @@
+name: BuildRelease
+
+on:
+  push:
+    tags:
+    - '*'
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Fetch TShock
+      run: |
+        $r = curl -UseBasicParsing -H @{'Accept' = 'application/vnd.github.v3+json'} https://api.github.com/repos/Pryaxis/TShock/releases/latest
+        $parsed = $r.content |ConvertFrom-Json
+        Invoke-WebRequest $parsed.assets.browser_download_url -outfile tshock.zip
+      shell: powershell
+    - name: Decompress
+      run: 7z.exe e tshock.zip -oEssentialsPlus\References "ServerPlugins/TShockAPI.dll" "Newtonsoft.Json.dll" "Mono.Data.Sqlite.dll" "MySql.Data.dll" "TerrariaServer.exe" "OTAPI.dll" -r
+      shell: cmd
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v1.0.2
+    - name: Build
+      run: msbuild EssentialsPlus.sln /p:Configuration=Release
+    - name: Create release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: EssentialsPlus\bin\Release\EssentialsPlus.dll
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
