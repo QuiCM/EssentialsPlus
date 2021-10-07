@@ -418,7 +418,7 @@ namespace EssentialsPlus
 						if (amtToAdd > 0 && item.stack > 0 && !item.Name.ToLower().Contains("coin"))
 						{
 							full = false;
-							e.Player.GiveItem(item.type, item.stack);
+							e.Player.GiveItem(item.type, amtToAdd);
 						}
 					}
 					if (!full)
@@ -433,7 +433,7 @@ namespace EssentialsPlus
 					if (amtToAdd == 0)
 						e.Player.SendErrorMessage("Your {0} is already full.", item.Name);
 					else if (amtToAdd > 0 && item.stack > 0)
-						e.Player.GiveItem(item.type, item.stack);
+						e.Player.GiveItem(item.type, amtToAdd);
 						e.Player.SendSuccessMessage("Filled up your {0}.", item.Name);
 				}
 			});
