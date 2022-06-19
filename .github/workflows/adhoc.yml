@@ -4,7 +4,7 @@ on:
   
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: windows-2019
 
     steps:
     - uses: actions/checkout@v2
@@ -18,7 +18,7 @@ jobs:
       run: 7z.exe e tshock.zip -oEssentialsPlus\References "ServerPlugins/TShockAPI.dll" "Newtonsoft.Json.dll" "Mono.Data.Sqlite.dll" "MySql.Data.dll" "TerrariaServer.exe" "OTAPI.dll" -r
       shell: cmd
     - name: Setup MSBuild
-      uses: microsoft/setup-msbuild@v1.0.2
+      uses: microsoft/setup-msbuild@v1.1
     - name: Build
       run: msbuild EssentialsPlus.sln /p:Configuration=Release
     - name: Create Artifact
